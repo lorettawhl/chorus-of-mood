@@ -16,13 +16,19 @@ const About: React.FC = () => {
           </h2>
           <div className="space-y-6 text-zinc-400 text-lg leading-relaxed font-sans text-center md:text-left">
             <p>
-              <strong className="text-white">Chorus of Mood</strong> is an interactive sound installation that turns unseen emotional data into a shared sonic experience.
+              Rooted in the hidden pressure of our daily lives, <strong className="text-white">Chorus of Mood</strong> rejects the silence we are forced to keep. Instead, it proposes a world where this internal tension is not a symptom to be cured, but a frequency to be heard. It envisions a reality where the invisible architecture of our anxiety becomes the foundation for a new form of connection.
             </p>
             <p>
-              By placing their fingers on illuminated sensor stations, participants contribute unique layers to a constantly evolving composition. We use <span className="text-indigo-400">Galvanic Skin Response (GSR)</span> technology to translate physiological arousal into sound: low arousal creates ambient drones, mid arousal generates rhythmic pulses, and high arousal weaves relaxing textures.
+              At the heart of Chorus of Mood lies an elemental encounter: trembling skin meeting the memory of stone. Three spheres of handcrafted jesmonite wait in the dark, not as passive tools, but as vessels that listen. When touched, this contact translates the body's hidden electricity—the <span className="text-indigo-400">Galvanic Skin Response</span>—into a living soundscape. The installation acts as a bridge between the physical and the immaterial, reading the unspoken rise and fall of our emotions and turning them into a fleeting choreography of light. Here, the machine does not diagnose; it amplifies, turning the solitary act of feeling into a tangible presence in the room.
             </p>
             <p>
-              Rather than suppressing emotion, the work honors each participant's state, guiding strangers toward a shared sonic equilibrium. It is a celebration of individuality finding harmony.
+              Over the experience, the soundscape evolves and thickens as individual rhythms collide. The rapid pulse of one stranger weaves into the steady hum of another, creating a complex, living harmony that no single person could create alone. It reminds us that our connection lies not in being the same, but in the friction and harmony of our differences.
+            </p>
+            <p>
+              Chorus of Mood amplifies the voices of our silent bodies, inviting us into an empathetic relationship with our own vulnerability. It asks: What if we stopped hiding our shadows? What if the very emotions we suppress are the essential notes required to enrich the world? In this chord of difference, the participant is not a user but a composer; anxiety is not a flaw but a texture; and the installation is a vessel for shared resonance.
+            </p>
+            <p>
+              Chorus of Mood opens a portal into the invisible landscape of feeling, teaching us that to inhabit the abyss together is to find a shared pulse amidst the darkness.
             </p>
           </div>
         </div>
@@ -72,22 +78,4 @@ const About: React.FC = () => {
                     const fallback = document.createElement('div');
                     fallback.className = 'absolute inset-0 bg-zinc-900 flex items-center justify-center';
                     fallback.innerHTML = `<span class="font-mono text-zinc-700 text-xs tracking-widest uppercase">Add ${filename}</span>`;
-                    e.currentTarget.parentElement?.appendChild(fallback);
-                 }}
-               />
-               
-               {/* Hover Overlay */}
-               <div className="absolute inset-0 bg-black/40 group-hover:bg-transparent transition-colors duration-500"></div>
-               
-               {/* Subtle border highlight on hover */}
-               <div className="absolute inset-0 border border-white/0 group-hover:border-white/20 transition-all duration-500 pointer-events-none"></div>
-            </div>
-          ))}
-        </div>
-      </div>
-
-    </section>
-  );
-};
-
-export default About;
+                    e.currentTarget.parentElement?.appendChil
