@@ -1,0 +1,5 @@
+{
+  "name": "Chorus of Mood",
+  "description": "An interactive portfolio for the Chorus of Mood sound installation, featuring a Web Audio simulation and AI-driven poetic interpretation.",
+  "requestFramePermissions": []
+}
