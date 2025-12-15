@@ -12,7 +12,7 @@ const About: React.FC = () => {
               Rooted in the hidden pressure of our daily lives, <strong className="text-white">Chorus of Mood</strong> rejects the silence we are forced to keep. Instead, it proposes a world where this internal tension is not a symptom to be cured, but a frequency to be heard. It envisions a reality where the invisible architecture of our anxiety becomes the foundation for a new form of connection.
             </p>
             <p>
-              At the heart of Chorus of Mood lies an elemental encounter: trembling skin meeting the memory of stone. Three spheres of handcrafted jesmonite wait in the dark, not as passive tools, but as vessels that listen. When touched, this contact translates the body's hidden electricity—the <span className="text-indigo-400">Galvanic Skin Response</span>—into a living soundscape. The installation acts as a bridge between the physical and the immaterial, reading the unspoken rise and fall of our emotions and turning them into a fleeting choreography of light. Here, the machine does not diagnose; it amplifies, turning the solitary act of feeling into a tangible presence in the room.
+              At the heart of Chorus of Mood lies an elemental encounter: trembling skin meeting the memory of stone. Three spheres of handcrafted jesmonite wait in the dark, not as passive tools, but as vessels that listen. When touched, this contact translates the body's hidden electricity—the Galvanic Skin Response—into a living soundscape. The installation acts as a bridge between the physical and the immaterial, reading the unspoken rise and fall of our emotions and turning them into a fleeting choreography of light. Here, the machine does not diagnose; it amplifies, turning the solitary act of feeling into a tangible presence in the room.
             </p>
             <p>
               Over the experience, the soundscape evolves and thickens as individual rhythms collide. The rapid pulse of one stranger weaves into the steady hum of another, creating a complex, living harmony that no single person could create alone. It reminds us that our connection lies not in being the same, but in the friction and harmony of our differences.
@@ -26,17 +26,13 @@ const About: React.FC = () => {
           </div>
         </div>
 
-        <div className="relative h-[700px] w-full order-1 md:order-2 group perspective-1000">
-          <div className="absolute w-64 h-64 bg-emerald-500/20 rounded-full blur-[80px] -top-10 -right-10 animate-pulse-slow z-0"></div>
-          <div className="absolute w-64 h-64 bg-blue-500/20 rounded-full blur-[80px] -bottom-10 -left-10 animate-float z-0"></div>
-          <div className="relative z-10 w-full h-full rounded-3xl overflow-hidden glass-panel border border-white/10 shadow-2xl transition-transform duration-700 hover:scale-[1.02]">
-            <div className="absolute inset-0 bg-zinc-900 animate-pulse z-0"></div>
+        <div className="relative h-[700px] w-full order-1 md:order-2">
+          <div className="relative z-10 w-full h-full overflow-hidden">
             <img 
               src="/images/soundscape.jpg" 
               alt="Visual representation of the collective soundscape" 
-              className="w-full h-full object-cover opacity-90 group-hover:opacity-100 transition-opacity duration-500"
+              className="w-full h-full object-cover"
             />
-            <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent opacity-60"></div>
           </div>
         </div>
       </div>
