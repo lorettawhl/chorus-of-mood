@@ -6,8 +6,8 @@ const About: React.FC = () => {
       
       <div className="container mx-auto px-6 md:px-12 max-w-6xl grid grid-cols-1 md:grid-cols-2 gap-16 items-center mb-32">
         
-        <div className="space-y-6 z-10 order-2 md:order-1">
-          <div className="space-y-5 text-zinc-400 text-base leading-relaxed font-sans text-center md:text-left">
+        <div className="space-y-4 z-10 order-2 md:order-1">
+          <div className="space-y-4 text-zinc-400 text-sm leading-relaxed font-sans text-center md:text-left">
             <p>
               Rooted in the hidden pressure of our daily lives, <strong className="text-white">Chorus of Mood</strong> rejects the silence we are forced to keep. Instead, it proposes a world where this internal tension is not a symptom to be cured, but a frequency to be heard. It envisions a reality where the invisible architecture of our anxiety becomes the foundation for a new form of connection.
             </p>
@@ -26,7 +26,7 @@ const About: React.FC = () => {
           </div>
         </div>
 
-        <div className="relative h-[600px] w-full order-1 md:order-2 group perspective-1000">
+        <div className="relative h-[700px] w-full order-1 md:order-2 group perspective-1000">
           <div className="absolute w-64 h-64 bg-emerald-500/20 rounded-full blur-[80px] -top-10 -right-10 animate-pulse-slow z-0"></div>
           <div className="absolute w-64 h-64 bg-blue-500/20 rounded-full blur-[80px] -bottom-10 -left-10 animate-float z-0"></div>
           <div className="relative z-10 w-full h-full rounded-3xl overflow-hidden glass-panel border border-white/10 shadow-2xl transition-transform duration-700 hover:scale-[1.02]">
