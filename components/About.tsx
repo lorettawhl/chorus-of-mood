@@ -26,7 +26,7 @@ const About: React.FC = () => {
           </div>
         </div>
 
-        <div className="relative h-[700px] w-full order-1 md:order-2">
+        <div className="relative h-[800px] w-full order-1 md:order-2">
           <div className="relative z-10 w-full h-full overflow-hidden">
             <img 
               src="/images/soundscape.jpg" 
