@@ -38,11 +38,18 @@ const Simulation: React.FC = () => {
   }, [sensors, isInitialized]);
 
   const handleMobileInitialize = () => {
-    // Must be synchronous for iOS
     soundEngine.prepare();
     soundEngine.startAllTracks();
     setIsInitialized(true);
     setShowMobileOverlay(false);
+  };
+
+  const handleDesktopInitialize = () => {
+    if (!isInitialized) {
+      soundEngine.prepare();
+      soundEngine.startAllTracks();
+      setIsInitialized(true);
+    }
   };
 
   const toggleSensor = (id: string) => {
@@ -52,11 +59,7 @@ const Simulation: React.FC = () => {
     if (now - lastToggleTime.current < 300) return;
     lastToggleTime.current = now;
 
-    if (!isInitialized) {
-      soundEngine.prepare();
-      soundEngine.startAllTracks();
-      setIsInitialized(true);
-    }
+    handleDesktopInitialize();
     
     setSensors(prev => prev.map(s => 
       s.id === id ? { ...s, isActive: !s.isActive } : s
@@ -64,11 +67,7 @@ const Simulation: React.FC = () => {
   };
 
   const toggleMute = () => {
-    if (!isInitialized) {
-      soundEngine.prepare();
-      soundEngine.startAllTracks();
-      setIsInitialized(true);
-    }
+    handleDesktopInitialize();
     
     const newMuted = !muted;
     setMuted(newMuted);
