@@ -7,22 +7,15 @@ const Process: React.FC = () => {
         <div className="grid grid-cols-1 md:grid-cols-2">
           {['process-1.jpg', 'process-2.jpg', 'process-3.jpg', 'process-4.jpg'].map((filename, index) => (
             <div key={index} className="relative aspect-video md:aspect-[16/10] overflow-hidden group border-b border-white/5 odd:border-r">
-               {/* Image */}
                <img 
                  src={`/images/${filename}`}
                  alt={`Process Detail ${index + 1}`}
-                 className="w-full h-full object-cover transition-transform duration-[1.5s] ease-in-out group-hover:scale-110 filter grayscale group-hover:grayscale-0"
-                 onError={(e) => {
-                    e.currentTarget.style.display = 'none';
-                    const fallback = document.createElement('div');
-                    fallback.className = 'absolute inset-0 bg-zinc-900 flex items-center justify-center';
-                    fallback.innerHTML = `<span class="font-mono text-zinc-700 text-xs tracking-widest uppercase">Add ${filename}</span>`;
-                    e.currentTarget.parentElement?.appendChild(fallback);
-                 }}
+                 className="w-full h-full object-cover filter grayscale group-hover:grayscale-0 transition-all duration-500"
                />
-               
-               {/* Hover Overlay */}
                <div className="absolute inset-0 bg-black/40 group-hover:bg-transparent transition-colors duration-500"></div>
+               <div className="absolute bottom-4 left-4 opacity-0 group-hover:opacity-100 transition-opacity duration-500">
+                 <p className="text-white text-sm font-sans">Caption text here</p>
+               </div>
             </div>
           ))}
         </div>
