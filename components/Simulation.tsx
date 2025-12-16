@@ -16,21 +16,15 @@ const Simulation: React.FC = () => {
   const [muted, setMuted] = useState(false);
   const lastToggleTime = useRef<number>(0);
 
-  // Detect Mobile on Mount
   useEffect(() => {
     const checkMobile = () => {
       if (window.innerWidth < 768) {
         setShowMobileOverlay(true);
       }
     };
-    
     checkMobile();
-    // Optional: Re-check on resize if you want dynamic switching
-    // window.addEventListener('resize', checkMobile);
-    // return () => window.removeEventListener('resize', checkMobile);
   }, []);
 
-  // Handle Audio Engine State
   useEffect(() => {
     if (!isInitialized) return;
     
@@ -43,34 +37,37 @@ const Simulation: React.FC = () => {
     });
   }, [sensors, isInitialized]);
 
-  const handleMobileInitialize = () => {
+  const handleMobileInitialize = async () => {
     soundEngine.prepare();
+    await soundEngine.startAllTracks();
     setIsInitialized(true);
     setShowMobileOverlay(false);
   };
 
-  const toggleSensor = (id: string) => {
-    // If mobile overlay is still active, don't allow toggling yet
+  const handleDesktopInitialize = async () => {
+    if (!isInitialized) {
+      soundEngine.prepare();
+      await soundEngine.startAllTracks();
+      setIsInitialized(true);
+    }
+  };
+
+  const toggleSensor = async (id: string) => {
     if (showMobileOverlay) return;
 
-    // PREVENT DOUBLE FIRING (TouchStart + Click)
     const now = Date.now();
     if (now - lastToggleTime.current < 300) return;
     lastToggleTime.current = now;
 
-    // CRITICAL FOR DESKTOP / FALLBACK:
-    // Call synchronous prepare() immediately on interaction.
-    soundEngine.prepare();
-    setIsInitialized(true);
+    await handleDesktopInitialize();
     
     setSensors(prev => prev.map(s => 
       s.id === id ? { ...s, isActive: !s.isActive } : s
     ));
   };
 
-  const toggleMute = () => {
-    soundEngine.prepare();
-    setIsInitialized(true);
+  const toggleMute = async () => {
+    await handleDesktopInitialize();
     
     const newMuted = !muted;
     setMuted(newMuted);
@@ -79,10 +76,8 @@ const Simulation: React.FC = () => {
 
   return (
     <section id="simulation" className="relative w-full min-h-[80vh] flex flex-col items-center justify-center py-20 overflow-hidden bg-[#050505]">
-      {/* Background Ambience */}
       <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,_var(--tw-gradient-stops))] from-zinc-900 to-[#050505] opacity-50 z-0"></div>
       
-      {/* Content */}
       <div className="relative z-10 container mx-auto px-4 max-w-4xl flex flex-col items-center">
         
         <div className="mb-12 text-center">
@@ -94,10 +89,8 @@ const Simulation: React.FC = () => {
           </p>
         </div>
 
-        {/* INTERACTION AREA */}
         <div className="relative w-full p-8 md:p-16 rounded-3xl border border-white/5 bg-black/40 backdrop-blur-sm min-h-[400px] flex flex-col items-center justify-center overflow-hidden">
           
-          {/* MOBILE OVERLAY: Forces explicit unlock click on iOS */}
           {showMobileOverlay && (
             <div className="absolute inset-0 z-50 bg-black/80 backdrop-blur-md flex flex-col items-center justify-center p-6 text-center animate-in fade-in duration-500">
                 <p className="text-zinc-300 font-sans mb-6 max-w-xs">
@@ -117,7 +110,6 @@ const Simulation: React.FC = () => {
             </div>
           )}
 
-          {/* Audio Control */}
           <div className="absolute top-6 right-6 opacity-100 z-40">
             <button 
               onClick={toggleMute}
@@ -129,7 +121,6 @@ const Simulation: React.FC = () => {
             </button>
           </div>
 
-          {/* Sensor Grid */}
           <div className={`flex flex-col md:flex-row gap-8 md:gap-16 items-center justify-center w-full transition-all duration-700 ${showMobileOverlay ? 'opacity-30 blur-sm scale-95' : 'opacity-100 scale-100'}`}>
             {sensors.map(sensor => (
               <SensorNode 
