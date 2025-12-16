@@ -37,37 +37,38 @@ const Simulation: React.FC = () => {
     });
   }, [sensors, isInitialized]);
 
-  const handleMobileInitialize = async () => {
+  const handleMobileInitialize = () => {
+    // Must be synchronous for iOS
     soundEngine.prepare();
-    await soundEngine.startAllTracks();
+    soundEngine.startAllTracks();
     setIsInitialized(true);
     setShowMobileOverlay(false);
   };
 
-  const handleDesktopInitialize = async () => {
-    if (!isInitialized) {
-      soundEngine.prepare();
-      await soundEngine.startAllTracks();
-      setIsInitialized(true);
-    }
-  };
-
-  const toggleSensor = async (id: string) => {
+  const toggleSensor = (id: string) => {
     if (showMobileOverlay) return;
 
     const now = Date.now();
     if (now - lastToggleTime.current < 300) return;
     lastToggleTime.current = now;
 
-    await handleDesktopInitialize();
+    if (!isInitialized) {
+      soundEngine.prepare();
+      soundEngine.startAllTracks();
+      setIsInitialized(true);
+    }
     
     setSensors(prev => prev.map(s => 
       s.id === id ? { ...s, isActive: !s.isActive } : s
     ));
   };
 
-  const toggleMute = async () => {
-    await handleDesktopInitialize();
+  const toggleMute = () => {
+    if (!isInitialized) {
+      soundEngine.prepare();
+      soundEngine.startAllTracks();
+      setIsInitialized(true);
+    }
     
     const newMuted = !muted;
     setMuted(newMuted);
@@ -98,7 +99,6 @@ const Simulation: React.FC = () => {
                 </p>
                 <button 
                     onClick={handleMobileInitialize}
-                    onTouchStart={handleMobileInitialize} 
                     className="group relative px-8 py-4 bg-zinc-100 text-black font-bold font-display tracking-widest uppercase rounded-full hover:scale-105 transition-transform"
                 >
                     <span className="relative z-10 flex items-center gap-2">
@@ -113,7 +113,6 @@ const Simulation: React.FC = () => {
           <div className="absolute top-6 right-6 opacity-100 z-40">
             <button 
               onClick={toggleMute}
-              onTouchStart={toggleMute}
               className="p-3 rounded-full bg-zinc-800/50 hover:bg-zinc-700/50 text-zinc-300 transition-colors"
               title={muted ? "Unmute" : "Mute"}
             >
