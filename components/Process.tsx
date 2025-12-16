@@ -17,7 +17,7 @@ const Process: React.FC = () => {
                <img 
                  src={`/images/${filename}`}
                  alt={`Process Detail ${index + 1}`}
-                 className="w-full h-full object-cover filter grayscale group-hover:grayscale-0 transition-all duration-500"
+                 className={`w-full h-full object-cover filter grayscale group-hover:grayscale-0 transition-all duration-500 ${index === 0 ? 'object-bottom' : ''}`}
                />
                <div className="absolute inset-0 bg-black/40 group-hover:bg-transparent transition-colors duration-500"></div>
                <div className="absolute bottom-4 left-4 right-4 opacity-0 group-hover:opacity-100 transition-opacity duration-500">
