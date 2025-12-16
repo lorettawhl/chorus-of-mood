@@ -9,12 +9,10 @@ const AUDIO_FILES = {
 class SoundEngine {
   public ctx: AudioContext | null = null;
   private masterGain: GainNode | null = null;
-  private sources: Map<ArousalLevel, any> = new Map();
+  private trackGains: Map<ArousalLevel, GainNode> = new Map();
   private buffers: Map<ArousalLevel, AudioBuffer> = new Map();
+  private isStarted: boolean = false;
   private isMuted: boolean = false;
-  private gridStartTime: number = 0;
-  
-  private readonly BEAT_GRID = 3.5; // 3.5 seconds per bar (4 bars = 14s)
 
   constructor() {}
 
@@ -67,6 +65,30 @@ class SoundEngine {
     }
   }
 
+  private startAllTracks() {
+    if (!this.ctx || !this.masterGain || this.isStarted) return;
+    
+    const startTime = this.ctx.currentTime;
+
+    for (const [level, buffer] of this.buffers.entries()) {
+      const source = this.ctx.createBufferSource();
+      source.buffer = buffer;
+      source.loop = true;
+
+      const gain = this.ctx.createGain();
+      gain.gain.value = 0; // Start muted
+      
+      source.connect(gain);
+      gain.connect(this.masterGain);
+      source.start(startTime);
+
+      this.trackGains.set(level, gain);
+    }
+
+    this.isStarted = true;
+    console.log("All tracks started (muted)");
+  }
+
   public setMute(mute: boolean) {
     this.isMuted = mute;
     if (this.masterGain && this.ctx) {
@@ -74,75 +96,30 @@ class SoundEngine {
     }
   }
 
-  private getNextGridTime(): number {
-    if (!this.ctx) return 0;
-    
-    const timeSinceStart = this.ctx.currentTime - this.gridStartTime;
-    const timeIntoCurrentBar = timeSinceStart % this.BEAT_GRID;
-    const timeToNextBar = this.BEAT_GRID - timeIntoCurrentBar;
-    
-    return this.ctx.currentTime + timeToNextBar;
-  }
-
   public startSound(level: ArousalLevel) {
     if (!this.ctx) this.prepare();
     if (!this.ctx) return;
     
-    if (this.sources.has(level)) return;
+    // Start all tracks on first interaction
+    if (!this.isStarted) {
+      this.startAllTracks();
+    }
 
-    if (this.buffers.has(level)) {
-      const stopFn = this.playSample(level);
-      this.sources.set(level, { stop: stopFn });
-    } else {
-      console.warn(`No audio buffer loaded for ${level}`);
+    // Unmute this track
+    const gain = this.trackGains.get(level);
+    if (gain && this.ctx) {
+      gain.gain.setTargetAtTime(0.8, this.ctx.currentTime, 0.3);
     }
   }
 
   public stopSound(level: ArousalLevel) {
-    const sound = this.sources.get(level);
-    if (sound) {
-      sound.stop();
-      this.sources.delete(level);
-    }
-  }
-
-  private playSample(level: ArousalLevel) {
-    if (!this.ctx || !this.masterGain) return () => {};
-    const buffer = this.buffers.get(level);
-    if (!buffer) return () => {};
-
-    let startTime: number;
+    if (!this.ctx) return;
     
-    // First sound sets the grid, others sync to it
-    if (this.gridStartTime === 0) {
-      startTime = this.ctx.currentTime;
-      this.gridStartTime = startTime;
-    } else {
-      startTime = this.getNextGridTime();
-    }
-    
-    const source = this.ctx.createBufferSource();
-    source.buffer = buffer;
-    source.loop = true;
-
-    const gain = this.ctx.createGain();
-    gain.gain.value = 0;
-    
-    source.connect(gain);
-    gain.connect(this.masterGain);
-
-    source.start(startTime);
-    gain.gain.setValueAtTime(0, startTime);
-    gain.gain.linearRampToValueAtTime(0.8, startTime + 0.3);
-
-    return () => {
-      if (!this.ctx) return;
+    // Mute this track (but keep it playing)
+    const gain = this.trackGains.get(level);
+    if (gain) {
       gain.gain.setTargetAtTime(0, this.ctx.currentTime, 0.2);
-      setTimeout(() => {
-        source.stop();
-        gain.disconnect();
-      }, 300);
-    };
+    }
   }
 }
 
