@@ -21,7 +21,7 @@ const Process: React.FC = () => {
                />
                <div className="absolute inset-0 bg-black/40 group-hover:bg-transparent transition-colors duration-500"></div>
                <div className="absolute bottom-4 left-4 right-4 opacity-0 group-hover:opacity-100 transition-opacity duration-500">
-                 <p className={`text-[10px] font-sans leading-relaxed ${index < 2 ? 'text-[#050505]' : 'text-white'}`}>{processCaptions[index]}</p>
+                 <p className={`text-[8px] leading-tight md:text-[10px] md:leading-relaxed font-sans ${index < 2 ? 'text-[#050505]' : 'text-white'}`}>{processCaptions[index]}</p>
                </div>
             </div>
           ))}
