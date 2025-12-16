@@ -1,6 +1,13 @@
 import React from 'react';
 
 const About: React.FC = () => {
+  const detailCaptions = [
+    "The console features three hand-cast Jesmonite spheres with integrated Galvanic Skin Response (GSR) sensors. The spheres are mounted on a CNC-milled wooden chassis finished with a diffuse acrylic surface, housing addressable LED arrays beneath each interaction point for visual feedback.",
+    "Embedded GSR sensors detect skin conductance variations upon contact. An Arduino microcontroller processes these bio-signals, classifying them into arousal tiers to modulate LED chromaticity. Simultaneously, a Raspberry Pi interprets this data to trigger generative audio layering over a continuous base track.",
+    "The system handles simultaneous multi-user input, with each sphere processing GSR readings independently. Visual feedback maps arousal states to a color spectrum: White (Standby), Green (Low), Blue (Mid), and Red (High). The audio engine scales in real-time; as user participation increases, the soundscape deepens into a richer, denser texture.",
+    "The system utilizes a library of 18 distinct sound layers mapped to specific arousal classifications. This stochastic arrangement creates a non-linear, generative composition that evolves responsively to collective user biometrics—ensuring no two performances are identical."
+  ];
+
   return (
     <section className="py-24 bg-[#080808] text-left relative overflow-hidden">
       
@@ -47,8 +54,8 @@ const About: React.FC = () => {
                 className="w-full h-full object-cover filter grayscale group-hover:grayscale-0 transition-all duration-500"
               />
               <div className="absolute inset-0 bg-black/40 group-hover:bg-transparent transition-colors duration-500"></div>
-              <div className="absolute bottom-4 left-4 opacity-0 group-hover:opacity-100 transition-opacity duration-500">
-                <p className="text-white text-sm font-sans">Caption text here</p>
+              <div className="absolute bottom-4 left-4 right-4 opacity-0 group-hover:opacity-100 transition-opacity duration-500">
+                <p className="text-white text-[10px] font-sans leading-relaxed">{detailCaptions[index]}</p>
               </div>
             </div>
           ))}
