@@ -12,6 +12,7 @@ class SoundEngine {
   private trackGains: Map<ArousalLevel, GainNode> = new Map();
   private buffers: Map<ArousalLevel, AudioBuffer> = new Map();
   private isStarted: boolean = false;
+  private isLoaded: boolean = false;
   private isMuted: boolean = false;
 
   constructor() {}
@@ -51,23 +52,28 @@ class SoundEngine {
 
     console.log("Loading audio samples...");
 
-    for (const [level, url] of Object.entries(AUDIO_FILES)) {
+    const loadPromises = Object.entries(AUDIO_FILES).map(async ([level, url]) => {
       try {
         const response = await fetch(url);
         if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
         const arrayBuffer = await response.arrayBuffer();
-        const audioBuffer = await this.ctx.decodeAudioData(arrayBuffer);
+        const audioBuffer = await this.ctx!.decodeAudioData(arrayBuffer);
         this.buffers.set(level as ArousalLevel, audioBuffer);
         console.log(`Loaded sample for ${level}: ${url}`);
       } catch (e) {
         console.warn(`Could not load sample for ${level} (${url}).`, e);
       }
-    }
+    });
+
+    await Promise.all(loadPromises);
+    this.isLoaded = true;
+    console.log("All samples loaded, ready to play");
   }
 
   private startAllTracks() {
-    if (!this.ctx || !this.masterGain || this.isStarted) return;
+    if (!this.ctx || !this.masterGain || this.isStarted || !this.isLoaded) return;
     
+    console.log("Starting all tracks...");
     const startTime = this.ctx.currentTime;
 
     for (const [level, buffer] of this.buffers.entries()) {
@@ -76,13 +82,14 @@ class SoundEngine {
       source.loop = true;
 
       const gain = this.ctx.createGain();
-      gain.gain.value = 0; // Start muted
+      gain.gain.value = 0;
       
       source.connect(gain);
       gain.connect(this.masterGain);
       source.start(startTime);
 
       this.trackGains.set(level, gain);
+      console.log(`Started track: ${level}`);
     }
 
     this.isStarted = true;
@@ -96,10 +103,23 @@ class SoundEngine {
     }
   }
 
-  public startSound(level: ArousalLevel) {
+  public async startSound(level: ArousalLevel) {
     if (!this.ctx) this.prepare();
     if (!this.ctx) return;
     
+    // Wait for samples to load if not ready
+    if (!this.isLoaded) {
+      console.log("Waiting for samples to load...");
+      await new Promise<void>(resolve => {
+        const checkLoaded = setInterval(() => {
+          if (this.isLoaded) {
+            clearInterval(checkLoaded);
+            resolve();
+          }
+        }, 100);
+      });
+    }
+
     // Start all tracks on first interaction
     if (!this.isStarted) {
       this.startAllTracks();
@@ -108,6 +128,7 @@ class SoundEngine {
     // Unmute this track
     const gain = this.trackGains.get(level);
     if (gain && this.ctx) {
+      console.log(`Unmuting track: ${level}`);
       gain.gain.setTargetAtTime(0.8, this.ctx.currentTime, 0.3);
     }
   }
@@ -118,6 +139,7 @@ class SoundEngine {
     // Mute this track (but keep it playing)
     const gain = this.trackGains.get(level);
     if (gain) {
+      console.log(`Muting track: ${level}`);
       gain.gain.setTargetAtTime(0, this.ctx.currentTime, 0.2);
     }
   }
