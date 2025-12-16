@@ -6,7 +6,7 @@ import { Volume2, VolumeX, Play } from 'lucide-react';
 
 const Simulation: React.FC = () => {
   const [isInitialized, setIsInitialized] = useState(false);
-  const [showMobileOverlay, setShowMobileOverlay] = useState(false);
+  const [showOverlay, setShowOverlay] = useState(true); // Show for both desktop and mobile
   const [sensors, setSensors] = useState<SensorState[]>([
     { id: '1', level: ArousalLevel.LOW, isActive: false, color: 'green', label: 'Low Arousal', soundDescription: 'Natural Soundscape' },
     { id: '2', level: ArousalLevel.MID, isActive: false, color: 'blue', label: 'Mid Arousal', soundDescription: 'Relaxing Tunes' },
@@ -15,15 +15,6 @@ const Simulation: React.FC = () => {
 
   const [muted, setMuted] = useState(false);
   const lastToggleTime = useRef<number>(0);
-
-  useEffect(() => {
-    const checkMobile = () => {
-      if (window.innerWidth < 768) {
-        setShowMobileOverlay(true);
-      }
-    };
-    checkMobile();
-  }, []);
 
   useEffect(() => {
     if (!isInitialized) return;
@@ -37,29 +28,19 @@ const Simulation: React.FC = () => {
     });
   }, [sensors, isInitialized]);
 
-  const handleMobileInitialize = () => {
+  const handleInitialize = () => {
     soundEngine.prepare();
     soundEngine.startAllTracks();
     setIsInitialized(true);
-    setShowMobileOverlay(false);
-  };
-
-  const handleDesktopInitialize = () => {
-    if (!isInitialized) {
-      soundEngine.prepare();
-      soundEngine.startAllTracks();
-      setIsInitialized(true);
-    }
+    setShowOverlay(false);
   };
 
   const toggleSensor = (id: string) => {
-    if (showMobileOverlay) return;
+    if (showOverlay) return;
 
     const now = Date.now();
     if (now - lastToggleTime.current < 300) return;
     lastToggleTime.current = now;
-
-    handleDesktopInitialize();
     
     setSensors(prev => prev.map(s => 
       s.id === id ? { ...s, isActive: !s.isActive } : s
@@ -67,8 +48,6 @@ const Simulation: React.FC = () => {
   };
 
   const toggleMute = () => {
-    handleDesktopInitialize();
-    
     const newMuted = !muted;
     setMuted(newMuted);
     soundEngine.setMute(newMuted);
@@ -91,13 +70,13 @@ const Simulation: React.FC = () => {
 
         <div className="relative w-full p-8 md:p-16 rounded-3xl border border-white/5 bg-black/40 backdrop-blur-sm min-h-[400px] flex flex-col items-center justify-center overflow-hidden">
           
-          {showMobileOverlay && (
+          {showOverlay && (
             <div className="absolute inset-0 z-50 bg-black/80 backdrop-blur-md flex flex-col items-center justify-center p-6 text-center animate-in fade-in duration-500">
                 <p className="text-zinc-300 font-sans mb-6 max-w-xs">
-                    Tap below to initialize the audio engine for this device.
+                    Click below to initialize the audio engine.
                 </p>
                 <button 
-                    onClick={handleMobileInitialize}
+                    onClick={handleInitialize}
                     className="group relative px-8 py-4 bg-zinc-100 text-black font-bold font-display tracking-widest uppercase rounded-full hover:scale-105 transition-transform"
                 >
                     <span className="relative z-10 flex items-center gap-2">
@@ -119,7 +98,7 @@ const Simulation: React.FC = () => {
             </button>
           </div>
 
-          <div className={`flex flex-col md:flex-row gap-8 md:gap-16 items-center justify-center w-full transition-all duration-700 ${showMobileOverlay ? 'opacity-30 blur-sm scale-95' : 'opacity-100 scale-100'}`}>
+          <div className={`flex flex-col md:flex-row gap-8 md:gap-16 items-center justify-center w-full transition-all duration-700 ${showOverlay ? 'opacity-30 blur-sm scale-95' : 'opacity-100 scale-100'}`}>
             {sensors.map(sensor => (
               <SensorNode 
                 key={sensor.id} 
