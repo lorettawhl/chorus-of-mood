@@ -12,8 +12,9 @@ class SoundEngine {
   private sources: Map<ArousalLevel, any> = new Map();
   private buffers: Map<ArousalLevel, AudioBuffer> = new Map();
   private isMuted: boolean = false;
+  private gridStartTime: number = 0;
   
-  private readonly BEAT_GRID = 3.5; // 3.5 seconds per bar (4 bars in 14s)
+  private readonly BEAT_GRID = 3.5; // 3.5 seconds per bar (4 bars = 14s)
 
   constructor() {}
 
@@ -75,9 +76,12 @@ class SoundEngine {
 
   private getNextGridTime(): number {
     if (!this.ctx) return 0;
-    const now = this.ctx.currentTime;
-    const timeToNext = this.BEAT_GRID - (now % this.BEAT_GRID);
-    return now + timeToNext;
+    
+    const timeSinceStart = this.ctx.currentTime - this.gridStartTime;
+    const timeIntoCurrentBar = timeSinceStart % this.BEAT_GRID;
+    const timeToNextBar = this.BEAT_GRID - timeIntoCurrentBar;
+    
+    return this.ctx.currentTime + timeToNextBar;
   }
 
   public startSound(level: ArousalLevel) {
@@ -107,7 +111,15 @@ class SoundEngine {
     const buffer = this.buffers.get(level);
     if (!buffer) return () => {};
 
-    const startTime = this.getNextGridTime();
+    let startTime: number;
+    
+    // First sound sets the grid, others sync to it
+    if (this.gridStartTime === 0) {
+      startTime = this.ctx.currentTime;
+      this.gridStartTime = startTime;
+    } else {
+      startTime = this.getNextGridTime();
+    }
     
     const source = this.ctx.createBufferSource();
     source.buffer = buffer;
@@ -121,15 +133,15 @@ class SoundEngine {
 
     source.start(startTime);
     gain.gain.setValueAtTime(0, startTime);
-    gain.gain.linearRampToValueAtTime(0.8, startTime + 0.5);
+    gain.gain.linearRampToValueAtTime(0.8, startTime + 0.3);
 
     return () => {
       if (!this.ctx) return;
-      gain.gain.setTargetAtTime(0, this.ctx.currentTime, 0.3);
+      gain.gain.setTargetAtTime(0, this.ctx.currentTime, 0.2);
       setTimeout(() => {
         source.stop();
         gain.disconnect();
-      }, 400);
+      }, 300);
     };
   }
 }
