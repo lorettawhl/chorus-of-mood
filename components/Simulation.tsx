@@ -8,7 +8,7 @@ const Simulation: React.FC = () => {
   const [isInitialized, setIsInitialized] = useState(false);
   const [showOverlay, setShowOverlay] = useState(true);
   const [muted, setMuted] = useState(false);
-  const [mobileNeedsUnmute, setMobileNeedsUnmute] = useState(false);
+  const [needsAudioStart, setNeedsAudioStart] = useState(false);
   const [sensors, setSensors] = useState<SensorState[]>([
     { id: '1', level: ArousalLevel.LOW, isActive: false, color: 'green', label: 'Low Arousal', soundDescription: 'Natural Soundscape' },
     { id: '2', level: ArousalLevel.MID, isActive: false, color: 'blue', label: 'Mid Arousal', soundDescription: 'Relaxing Tunes' },
@@ -30,13 +30,21 @@ const Simulation: React.FC = () => {
   }, [sensors, isInitialized]);
 
   const handleInitialize = () => {
-    soundEngine.prepare();
-    soundEngine.startAllTracks();
+    // Detect iOS
+    const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) || 
+      (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
     
-    // ALWAYS start muted - user must click speaker to hear audio
-    soundEngine.setMute(true);
-    setMuted(true);
-    setMobileNeedsUnmute(true);
+    soundEngine.prepare();
+    
+    if (isIOS) {
+      // iOS: DON'T start tracks yet - wait for speaker button click
+      setMuted(true);
+      setNeedsAudioStart(true);
+    } else {
+      // Desktop: start tracks and base immediately
+      soundEngine.startAllTracks();
+      soundEngine.toggleBaseTrack();
+    }
     
     setIsInitialized(true);
     setShowOverlay(false);
@@ -55,15 +63,18 @@ const Simulation: React.FC = () => {
   };
 
   const toggleMute = () => {
+    // First time on iOS - actually start the audio
+    if (needsAudioStart) {
+      soundEngine.startAllTracks();
+      soundEngine.toggleBaseTrack();
+      setNeedsAudioStart(false);
+      setMuted(false);
+      return;
+    }
+    
     const newMuted = !muted;
     setMuted(newMuted);
     soundEngine.setMute(newMuted);
-    
-    // First time unmuting on mobile - start base track
-    if (mobileNeedsUnmute && !newMuted) {
-      soundEngine.toggleBaseTrack();
-      setMobileNeedsUnmute(false);
-    }
   };
 
   return (
@@ -105,7 +116,7 @@ const Simulation: React.FC = () => {
           <button 
             onClick={toggleMute}
             className={`absolute top-6 right-6 z-40 p-3 rounded-full transition-colors ${
-              mobileNeedsUnmute 
+              needsAudioStart 
                 ? 'bg-yellow-500/50 text-white animate-pulse' 
                 : 'bg-zinc-800/50 hover:bg-zinc-700/50 text-zinc-300'
             }`}
