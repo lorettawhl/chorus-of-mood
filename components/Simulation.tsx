@@ -6,7 +6,9 @@ import { Volume2, VolumeX, Play } from 'lucide-react';
 
 const Simulation: React.FC = () => {
   const [isInitialized, setIsInitialized] = useState(false);
-  const [showOverlay, setShowOverlay] = useState(true); // Show for both desktop and mobile
+  const [showOverlay, setShowOverlay] = useState(true);
+  const [isMobile, setIsMobile] = useState(false);
+  const [baseActive, setBaseActive] = useState(false);
   const [sensors, setSensors] = useState<SensorState[]>([
     { id: '1', level: ArousalLevel.LOW, isActive: false, color: 'green', label: 'Low Arousal', soundDescription: 'Natural Soundscape' },
     { id: '2', level: ArousalLevel.MID, isActive: false, color: 'blue', label: 'Mid Arousal', soundDescription: 'Relaxing Tunes' },
@@ -15,6 +17,15 @@ const Simulation: React.FC = () => {
 
   const [muted, setMuted] = useState(false);
   const lastToggleTime = useRef<number>(0);
+
+  useEffect(() => {
+    const checkMobile = () => {
+      setIsMobile(window.innerWidth < 768);
+    };
+    checkMobile();
+    window.addEventListener('resize', checkMobile);
+    return () => window.removeEventListener('resize', checkMobile);
+  }, []);
 
   useEffect(() => {
     if (!isInitialized) return;
@@ -31,6 +42,13 @@ const Simulation: React.FC = () => {
   const handleInitialize = () => {
     soundEngine.prepare();
     soundEngine.startAllTracks();
+    
+    // On desktop, also start base track immediately
+    if (!isMobile) {
+      soundEngine.toggleBaseTrack();
+      setBaseActive(true);
+    }
+    
     setIsInitialized(true);
     setShowOverlay(false);
   };
@@ -51,6 +69,11 @@ const Simulation: React.FC = () => {
     const newMuted = !muted;
     setMuted(newMuted);
     soundEngine.setMute(newMuted);
+  };
+
+  const toggleBaseTrack = () => {
+    const isPlaying = soundEngine.toggleBaseTrack();
+    setBaseActive(isPlaying);
   };
 
   return (
@@ -88,7 +111,24 @@ const Simulation: React.FC = () => {
             </div>
           )}
 
-          <div className="absolute top-6 right-6 opacity-100 z-40">
+          {/* Speaker button - different behavior for mobile vs desktop */}
+          <div className="absolute top-6 right-6 z-40 flex gap-2">
+            {/* Base track button - flickering on mobile when not active */}
+            {isMobile && isInitialized && (
+              <button 
+                onClick={toggleBaseTrack}
+                className={`p-3 rounded-full transition-colors ${
+                  baseActive 
+                    ? 'bg-zinc-700/50 text-white' 
+                    : 'bg-zinc-800/50 text-zinc-300 animate-pulse'
+                }`}
+                title={baseActive ? "Mute base track" : "Play base track"}
+              >
+                {baseActive ? <Volume2 size={20} /> : <VolumeX size={20} />}
+              </button>
+            )}
+            
+            {/* Master mute button */}
             <button 
               onClick={toggleMute}
               className="p-3 rounded-full bg-zinc-800/50 hover:bg-zinc-700/50 text-zinc-300 transition-colors"
