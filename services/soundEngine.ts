@@ -1,18 +1,22 @@
 import { ArousalLevel } from '../types';
 
 const AUDIO_FILES = {
-  base: '/sounds/0001.wav',
   [ArousalLevel.LOW]: '/sounds/0003.wav',
   [ArousalLevel.MID]: '/sounds/0008.wav',
   [ArousalLevel.HIGH]: '/sounds/0015.wav',
 };
 
+const BASE_TRACK = '/sounds/0001.wav';
+
 class SoundEngine {
   public ctx: AudioContext | null = null;
   private masterGain: GainNode | null = null;
-  private trackGains: Map<string, GainNode> = new Map();
-  private buffers: Map<string, AudioBuffer> = new Map();
+  private trackGains: Map<ArousalLevel, GainNode> = new Map();
+  private buffers: Map<ArousalLevel, AudioBuffer> = new Map();
+  private baseBuffer: AudioBuffer | null = null;
+  private baseGain: GainNode | null = null;
   private isStarted: boolean = false;
+  private isLoaded: boolean = false;
   private isMuted: boolean = false;
 
   constructor() {}
@@ -53,20 +57,33 @@ class SoundEngine {
 
     console.log("Loading audio samples...");
 
-    const loadPromises = Object.entries(AUDIO_FILES).map(async ([key, url]) => {
+    // Load base track
+    try {
+      const response = await fetch(BASE_TRACK);
+      if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+      const arrayBuffer = await response.arrayBuffer();
+      this.baseBuffer = await this.ctx.decodeAudioData(arrayBuffer);
+      console.log("Loaded base track");
+    } catch (e) {
+      console.warn("Could not load base track", e);
+    }
+
+    // Load arousal tracks
+    const loadPromises = Object.entries(AUDIO_FILES).map(async ([level, url]) => {
       try {
         const response = await fetch(url);
         if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
         const arrayBuffer = await response.arrayBuffer();
         const audioBuffer = await this.ctx!.decodeAudioData(arrayBuffer);
-        this.buffers.set(key, audioBuffer);
-        console.log(`Loaded sample: ${key} (${url})`);
+        this.buffers.set(level as ArousalLevel, audioBuffer);
+        console.log(`Loaded sample for ${level}: ${url}`);
       } catch (e) {
-        console.warn(`Could not load sample for ${key} (${url}).`, e);
+        console.warn(`Could not load sample for ${level} (${url}).`, e);
       }
     });
 
     await Promise.all(loadPromises);
+    this.isLoaded = true;
     console.log("All samples loaded, ready to play");
 
     // If tracks were already started, begin the WAV tracks now
@@ -81,29 +98,41 @@ class SoundEngine {
     console.log("Starting all tracks...");
     const startTime = this.ctx.currentTime;
 
-    for (const [key, buffer] of this.buffers.entries()) {
-      if (this.trackGains.has(key)) continue;
+    // Start base track (audible)
+    if (this.baseBuffer && !this.baseGain) {
+      const source = this.ctx.createBufferSource();
+      source.buffer = this.baseBuffer;
+      source.loop = true;
+
+      this.baseGain = this.ctx.createGain();
+      this.baseGain.gain.value = 0;
+
+      source.connect(this.baseGain);
+      this.baseGain.connect(this.masterGain);
+      source.start(startTime);
+
+      // Unmute base immediately
+      this.baseGain.gain.setTargetAtTime(0.8, this.ctx.currentTime, 0.1);
+      console.log("Started base track (audible)");
+    }
+
+    // Start arousal tracks (muted)
+    for (const [level, buffer] of this.buffers.entries()) {
+      if (this.trackGains.has(level)) continue;
 
       const source = this.ctx.createBufferSource();
       source.buffer = buffer;
       source.loop = true;
 
       const gain = this.ctx.createGain();
-      gain.gain.value = 0; // ALL start muted
+      gain.gain.value = 0;
 
       source.connect(gain);
       gain.connect(this.masterGain);
       source.start(startTime);
 
-      this.trackGains.set(key, gain);
-      console.log(`Started track: ${key} (muted)`);
-    }
-
-    // Unmute base track immediately
-    const baseGain = this.trackGains.get('base');
-    if (baseGain) {
-      baseGain.gain.setTargetAtTime(0.8, this.ctx.currentTime, 0.1);
-      console.log("Base track unmuted");
+      this.trackGains.set(level, gain);
+      console.log(`Started track: ${level}`);
     }
 
     console.log("All tracks started");
