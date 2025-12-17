@@ -30,7 +30,9 @@ const Simulation: React.FC = () => {
   }, [sensors, isInitialized]);
 
   const handleInitialize = () => {
-    const isMobile = window.innerWidth < 768;
+    // Detect iOS and Android devices
+    const isMobile = /iPad|iPhone|iPod|Android/i.test(navigator.userAgent) || 
+      (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
     
     soundEngine.prepare();
     soundEngine.startAllTracks();
