@@ -6,19 +6,14 @@ const AUDIO_FILES = {
   [ArousalLevel.HIGH]: '/sounds/0015.wav',
 };
 
-const BASE_TRACK = '/sounds/0001.wav';
-
 class SoundEngine {
   public ctx: AudioContext | null = null;
   private masterGain: GainNode | null = null;
   private trackGains: Map<ArousalLevel, GainNode> = new Map();
   private buffers: Map<ArousalLevel, AudioBuffer> = new Map();
-  private baseBuffer: AudioBuffer | null = null;
-  private baseGain: GainNode | null = null;
   private isStarted: boolean = false;
   private isLoaded: boolean = false;
   private isMuted: boolean = false;
-  private basePlaying: boolean = false;
 
   constructor() {}
 
@@ -30,6 +25,7 @@ class SoundEngine {
       this.loadSamples();
     }
 
+    // iOS unlock trick - play silent buffer
     if (this.ctx) {
       const buffer = this.ctx.createBuffer(1, 1, 22050);
       const source = this.ctx.createBufferSource();
@@ -57,18 +53,6 @@ class SoundEngine {
 
     console.log("Loading audio samples...");
 
-    // Load base track
-    try {
-      const response = await fetch(BASE_TRACK);
-      if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
-      const arrayBuffer = await response.arrayBuffer();
-      this.baseBuffer = await this.ctx.decodeAudioData(arrayBuffer);
-      console.log("Loaded base track");
-    } catch (e) {
-      console.warn("Could not load base track", e);
-    }
-
-    // Load arousal tracks
     const loadPromises = Object.entries(AUDIO_FILES).map(async ([level, url]) => {
       try {
         const response = await fetch(url);
@@ -86,6 +70,7 @@ class SoundEngine {
     this.isLoaded = true;
     console.log("All samples loaded, ready to play");
 
+    // If tracks were already started, begin the WAV tracks now
     if (this.isStarted) {
       this.startWavTracks();
     }
@@ -97,22 +82,6 @@ class SoundEngine {
     console.log("Starting all tracks...");
     const startTime = this.ctx.currentTime;
 
-    // Start base track (muted)
-    if (this.baseBuffer && !this.baseGain) {
-      const source = this.ctx.createBufferSource();
-      source.buffer = this.baseBuffer;
-      source.loop = true;
-
-      this.baseGain = this.ctx.createGain();
-      this.baseGain.gain.value = 0;
-
-      source.connect(this.baseGain);
-      this.baseGain.connect(this.masterGain);
-      source.start(startTime);
-      console.log("Started base track (muted)");
-    }
-
-    // Start arousal tracks (muted)
     for (const [level, buffer] of this.buffers.entries()) {
       if (this.trackGains.has(level)) continue;
 
@@ -140,30 +109,9 @@ class SoundEngine {
     console.log("startAllTracks called");
     this.isStarted = true;
 
-    if (this.buffers.size > 0 || this.baseBuffer) {
+    if (this.buffers.size > 0) {
       this.startWavTracks();
     }
-  }
-
-  // Toggle base track - called when speaker button is clicked
-  public toggleBaseTrack(): boolean {
-    if (!this.ctx || !this.baseGain) return false;
-
-    this.basePlaying = !this.basePlaying;
-    
-    if (this.basePlaying) {
-      console.log("Unmuting base track");
-      this.baseGain.gain.setTargetAtTime(0.8, this.ctx.currentTime, 0.3);
-    } else {
-      console.log("Muting base track");
-      this.baseGain.gain.setTargetAtTime(0, this.ctx.currentTime, 0.2);
-    }
-    
-    return this.basePlaying;
-  }
-
-  public isBasePlaying(): boolean {
-    return this.basePlaying;
   }
 
   public setMute(mute: boolean) {
