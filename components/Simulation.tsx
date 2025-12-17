@@ -7,25 +7,15 @@ import { Volume2, VolumeX, Play } from 'lucide-react';
 const Simulation: React.FC = () => {
   const [isInitialized, setIsInitialized] = useState(false);
   const [showOverlay, setShowOverlay] = useState(true);
-  const [isMobile, setIsMobile] = useState(false);
-  const [baseActive, setBaseActive] = useState(false);
+  const [muted, setMuted] = useState(false);
+  const [mobileNeedsUnmute, setMobileNeedsUnmute] = useState(false);
   const [sensors, setSensors] = useState<SensorState[]>([
     { id: '1', level: ArousalLevel.LOW, isActive: false, color: 'green', label: 'Low Arousal', soundDescription: 'Natural Soundscape' },
     { id: '2', level: ArousalLevel.MID, isActive: false, color: 'blue', label: 'Mid Arousal', soundDescription: 'Relaxing Tunes' },
     { id: '3', level: ArousalLevel.HIGH, isActive: false, color: 'red', label: 'High Arousal', soundDescription: 'Rhythmic Beats' },
   ]);
 
-  const [muted, setMuted] = useState(false);
   const lastToggleTime = useRef<number>(0);
-
-  useEffect(() => {
-    const checkMobile = () => {
-      setIsMobile(window.innerWidth < 768);
-    };
-    checkMobile();
-    window.addEventListener('resize', checkMobile);
-    return () => window.removeEventListener('resize', checkMobile);
-  }, []);
 
   useEffect(() => {
     if (!isInitialized) return;
@@ -40,13 +30,19 @@ const Simulation: React.FC = () => {
   }, [sensors, isInitialized]);
 
   const handleInitialize = () => {
+    const isMobile = window.innerWidth < 768;
+    
     soundEngine.prepare();
     soundEngine.startAllTracks();
     
-    // On desktop, also start base track immediately
-    if (!isMobile) {
+    if (isMobile) {
+      // Mobile: start muted, need user to click speaker
+      soundEngine.setMute(true);
+      setMuted(true);
+      setMobileNeedsUnmute(true);
+    } else {
+      // Desktop: start unmuted with base playing
       soundEngine.toggleBaseTrack();
-      setBaseActive(true);
     }
     
     setIsInitialized(true);
@@ -69,11 +65,12 @@ const Simulation: React.FC = () => {
     const newMuted = !muted;
     setMuted(newMuted);
     soundEngine.setMute(newMuted);
-  };
-
-  const toggleBaseTrack = () => {
-    const isPlaying = soundEngine.toggleBaseTrack();
-    setBaseActive(isPlaying);
+    
+    // First time unmuting on mobile - start base track
+    if (mobileNeedsUnmute && !newMuted) {
+      soundEngine.toggleBaseTrack();
+      setMobileNeedsUnmute(false);
+    }
   };
 
   return (
@@ -111,32 +108,18 @@ const Simulation: React.FC = () => {
             </div>
           )}
 
-          {/* Speaker button - different behavior for mobile vs desktop */}
-          <div className="absolute top-6 right-6 z-40 flex gap-2">
-            {/* Base track button - flickering on mobile when not active */}
-            {isMobile && isInitialized && (
-              <button 
-                onClick={toggleBaseTrack}
-                className={`p-3 rounded-full transition-colors ${
-                  baseActive 
-                    ? 'bg-zinc-700/50 text-white' 
-                    : 'bg-zinc-800/50 text-zinc-300 animate-pulse'
-                }`}
-                title={baseActive ? "Mute base track" : "Play base track"}
-              >
-                {baseActive ? <Volume2 size={20} /> : <VolumeX size={20} />}
-              </button>
-            )}
-            
-            {/* Master mute button */}
-            <button 
-              onClick={toggleMute}
-              className="p-3 rounded-full bg-zinc-800/50 hover:bg-zinc-700/50 text-zinc-300 transition-colors"
-              title={muted ? "Unmute" : "Mute"}
-            >
-              {muted ? <VolumeX size={20} /> : <Volume2 size={20} />}
-            </button>
-          </div>
+          {/* Mute button */}
+          <button 
+            onClick={toggleMute}
+            className={`absolute top-6 right-6 z-40 p-3 rounded-full transition-colors ${
+              mobileNeedsUnmute 
+                ? 'bg-yellow-500/50 text-white animate-pulse' 
+                : 'bg-zinc-800/50 hover:bg-zinc-700/50 text-zinc-300'
+            }`}
+            title={muted ? "Unmute" : "Mute"}
+          >
+            {muted ? <VolumeX size={20} /> : <Volume2 size={20} />}
+          </button>
 
           <div className={`flex flex-col md:flex-row gap-8 md:gap-16 items-center justify-center w-full transition-all duration-700 ${showOverlay ? 'opacity-30 blur-sm scale-95' : 'opacity-100 scale-100'}`}>
             {sensors.map(sensor => (
