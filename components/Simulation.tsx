@@ -30,22 +30,13 @@ const Simulation: React.FC = () => {
   }, [sensors, isInitialized]);
 
   const handleInitialize = () => {
-    // Detect iOS and Android devices
-    const isMobile = /iPad|iPhone|iPod|Android/i.test(navigator.userAgent) || 
-      (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
-    
     soundEngine.prepare();
     soundEngine.startAllTracks();
     
-    if (isMobile) {
-      // Mobile: start muted, need user to click speaker
-      soundEngine.setMute(true);
-      setMuted(true);
-      setMobileNeedsUnmute(true);
-    } else {
-      // Desktop: start unmuted with base playing
-      soundEngine.toggleBaseTrack();
-    }
+    // ALWAYS start muted - user must click speaker to hear audio
+    soundEngine.setMute(true);
+    setMuted(true);
+    setMobileNeedsUnmute(true);
     
     setIsInitialized(true);
     setShowOverlay(false);
