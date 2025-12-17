@@ -1,6 +1,7 @@
 import { ArousalLevel } from '../types';
 
 const AUDIO_FILES = {
+  base: '/sounds/0001.wav',
   [ArousalLevel.LOW]: '/sounds/0003.wav',
   [ArousalLevel.MID]: '/sounds/0008.wav',
   [ArousalLevel.HIGH]: '/sounds/0015.wav',
@@ -9,8 +10,8 @@ const AUDIO_FILES = {
 class SoundEngine {
   public ctx: AudioContext | null = null;
   private masterGain: GainNode | null = null;
-  private trackGains: Map<ArousalLevel, GainNode> = new Map();
-  private buffers: Map<ArousalLevel, AudioBuffer> = new Map();
+  private trackGains: Map<string, GainNode> = new Map();
+  private buffers: Map<string, AudioBuffer> = new Map();
   private isStarted: boolean = false;
   private isLoaded: boolean = false;
   private isMuted: boolean = false;
@@ -53,16 +54,16 @@ class SoundEngine {
 
     console.log("Loading audio samples...");
 
-    const loadPromises = Object.entries(AUDIO_FILES).map(async ([level, url]) => {
+    const loadPromises = Object.entries(AUDIO_FILES).map(async ([key, url]) => {
       try {
         const response = await fetch(url);
         if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
         const arrayBuffer = await response.arrayBuffer();
         const audioBuffer = await this.ctx!.decodeAudioData(arrayBuffer);
-        this.buffers.set(level as ArousalLevel, audioBuffer);
-        console.log(`Loaded sample for ${level}: ${url}`);
+        this.buffers.set(key, audioBuffer);
+        console.log(`Loaded sample: ${key} (${url})`);
       } catch (e) {
-        console.warn(`Could not load sample for ${level} (${url}).`, e);
+        console.warn(`Could not load sample for ${key} (${url}).`, e);
       }
     });
 
@@ -82,25 +83,26 @@ class SoundEngine {
     console.log("Starting all tracks...");
     const startTime = this.ctx.currentTime;
 
-    for (const [level, buffer] of this.buffers.entries()) {
-      if (this.trackGains.has(level)) continue;
+    for (const [key, buffer] of this.buffers.entries()) {
+      if (this.trackGains.has(key)) continue;
 
       const source = this.ctx.createBufferSource();
       source.buffer = buffer;
       source.loop = true;
 
       const gain = this.ctx.createGain();
-      gain.gain.value = 0;
+      // Base track starts audible, others start muted
+      gain.gain.value = key === 'base' ? 0.8 : 0;
 
       source.connect(gain);
       gain.connect(this.masterGain);
       source.start(startTime);
 
-      this.trackGains.set(level, gain);
-      console.log(`Started track: ${level}`);
+      this.trackGains.set(key, gain);
+      console.log(`Started track: ${key} (${key === 'base' ? 'audible' : 'muted'})`);
     }
 
-    console.log("All tracks started (muted)");
+    console.log("All tracks started");
   }
 
   public startAllTracks() {
