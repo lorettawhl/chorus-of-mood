@@ -18,6 +18,7 @@ class SoundEngine {
   private isStarted: boolean = false;
   private isLoaded: boolean = false;
   private isMuted: boolean = false;
+  private basePlaying: boolean = false;
 
   constructor() {}
 
@@ -29,7 +30,6 @@ class SoundEngine {
       this.loadSamples();
     }
 
-    // iOS unlock trick - play silent buffer
     if (this.ctx) {
       const buffer = this.ctx.createBuffer(1, 1, 22050);
       const source = this.ctx.createBufferSource();
@@ -86,7 +86,6 @@ class SoundEngine {
     this.isLoaded = true;
     console.log("All samples loaded, ready to play");
 
-    // If tracks were already started, begin the WAV tracks now
     if (this.isStarted) {
       this.startWavTracks();
     }
@@ -98,7 +97,7 @@ class SoundEngine {
     console.log("Starting all tracks...");
     const startTime = this.ctx.currentTime;
 
-    // Start base track (audible)
+    // Start base track (muted)
     if (this.baseBuffer && !this.baseGain) {
       const source = this.ctx.createBufferSource();
       source.buffer = this.baseBuffer;
@@ -110,10 +109,7 @@ class SoundEngine {
       source.connect(this.baseGain);
       this.baseGain.connect(this.masterGain);
       source.start(startTime);
-
-      // Unmute base immediately
-      this.baseGain.gain.setTargetAtTime(0.8, this.ctx.currentTime, 0.1);
-      console.log("Started base track (audible)");
+      console.log("Started base track (muted)");
     }
 
     // Start arousal tracks (muted)
@@ -135,7 +131,7 @@ class SoundEngine {
       console.log(`Started track: ${level}`);
     }
 
-    console.log("All tracks started");
+    console.log("All tracks started (muted)");
   }
 
   public startAllTracks() {
@@ -144,9 +140,30 @@ class SoundEngine {
     console.log("startAllTracks called");
     this.isStarted = true;
 
-    if (this.buffers.size > 0) {
+    if (this.buffers.size > 0 || this.baseBuffer) {
       this.startWavTracks();
     }
+  }
+
+  // Toggle base track - called when speaker button is clicked
+  public toggleBaseTrack(): boolean {
+    if (!this.ctx || !this.baseGain) return false;
+
+    this.basePlaying = !this.basePlaying;
+    
+    if (this.basePlaying) {
+      console.log("Unmuting base track");
+      this.baseGain.gain.setTargetAtTime(0.8, this.ctx.currentTime, 0.3);
+    } else {
+      console.log("Muting base track");
+      this.baseGain.gain.setTargetAtTime(0, this.ctx.currentTime, 0.2);
+    }
+    
+    return this.basePlaying;
+  }
+
+  public isBasePlaying(): boolean {
+    return this.basePlaying;
   }
 
   public setMute(mute: boolean) {
