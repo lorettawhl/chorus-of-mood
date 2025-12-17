@@ -6,15 +6,14 @@ import { Volume2, VolumeX, Play } from 'lucide-react';
 
 const Simulation: React.FC = () => {
   const [isInitialized, setIsInitialized] = useState(false);
-  const [showOverlay, setShowOverlay] = useState(true);
-  const [muted, setMuted] = useState(false);
-  const [needsBaseStart, setNeedsBaseStart] = useState(false);
+  const [showOverlay, setShowOverlay] = useState(true); // Show for both desktop and mobile
   const [sensors, setSensors] = useState<SensorState[]>([
     { id: '1', level: ArousalLevel.LOW, isActive: false, color: 'green', label: 'Low Arousal', soundDescription: 'Natural Soundscape' },
     { id: '2', level: ArousalLevel.MID, isActive: false, color: 'blue', label: 'Mid Arousal', soundDescription: 'Relaxing Tunes' },
     { id: '3', level: ArousalLevel.HIGH, isActive: false, color: 'red', label: 'High Arousal', soundDescription: 'Rhythmic Beats' },
   ]);
 
+  const [muted, setMuted] = useState(false);
   const lastToggleTime = useRef<number>(0);
 
   useEffect(() => {
@@ -30,20 +29,8 @@ const Simulation: React.FC = () => {
   }, [sensors, isInitialized]);
 
   const handleInitialize = () => {
-    const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) || 
-      (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
-    
     soundEngine.prepare();
     soundEngine.startAllTracks();
-    
-    if (isIOS) {
-      // iOS: base track needs separate click to unmute
-      setNeedsBaseStart(true);
-    } else {
-      // Desktop: unmute base track immediately
-      soundEngine.toggleBaseTrack();
-    }
-    
     setIsInitialized(true);
     setShowOverlay(false);
   };
@@ -60,17 +47,10 @@ const Simulation: React.FC = () => {
     ));
   };
 
-  const handleSpeakerClick = () => {
-    if (needsBaseStart) {
-      // First click on iOS - start base track
-      soundEngine.toggleBaseTrack();
-      setNeedsBaseStart(false);
-    } else {
-      // Normal mute toggle
-      const newMuted = !muted;
-      setMuted(newMuted);
-      soundEngine.setMute(newMuted);
-    }
+  const toggleMute = () => {
+    const newMuted = !muted;
+    setMuted(newMuted);
+    soundEngine.setMute(newMuted);
   };
 
   return (
@@ -108,18 +88,15 @@ const Simulation: React.FC = () => {
             </div>
           )}
 
-          {/* Speaker button */}
-          <button 
-            onClick={handleSpeakerClick}
-            className={`absolute top-6 right-6 z-40 p-3 rounded-full transition-colors ${
-              needsBaseStart 
-                ? 'bg-yellow-500/50 text-white animate-pulse' 
-                : 'bg-zinc-800/50 hover:bg-zinc-700/50 text-zinc-300'
-            }`}
-            title={needsBaseStart ? "Tap to start audio" : (muted ? "Unmute" : "Mute")}
-          >
-            {(needsBaseStart || muted) ? <VolumeX size={20} /> : <Volume2 size={20} />}
-          </button>
+          <div className="absolute top-6 right-6 opacity-100 z-40">
+            <button 
+              onClick={toggleMute}
+              className="p-3 rounded-full bg-zinc-800/50 hover:bg-zinc-700/50 text-zinc-300 transition-colors"
+              title={muted ? "Unmute" : "Mute"}
+            >
+              {muted ? <VolumeX size={20} /> : <Volume2 size={20} />}
+            </button>
+          </div>
 
           <div className={`flex flex-col md:flex-row gap-8 md:gap-16 items-center justify-center w-full transition-all duration-700 ${showOverlay ? 'opacity-30 blur-sm scale-95' : 'opacity-100 scale-100'}`}>
             {sensors.map(sensor => (
