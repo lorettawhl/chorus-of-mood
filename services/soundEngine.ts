@@ -12,37 +12,17 @@ class SoundEngine {
   private masterGain: GainNode | null = null;
   private trackGains: Map<string, GainNode> = new Map();
   private buffers: Map<string, AudioBuffer> = new Map();
-  private sources: Map<string, AudioBufferSourceNode> = new Map();
   private isStarted: boolean = false;
   private isMuted: boolean = false;
 
-  constructor() {
-    // Preload samples immediately
-    this.preloadSamples();
-  }
-
-  private async preloadSamples() {
-    console.log("Preloading audio samples...");
-
-    for (const [key, url] of Object.entries(AUDIO_FILES)) {
-      try {
-        const response = await fetch(url);
-        if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
-        const arrayBuffer = await response.arrayBuffer();
-        // Store raw array buffer - decode later when context exists
-        this.buffers.set(key + '_raw', arrayBuffer as any);
-        console.log(`Preloaded: ${key}`);
-      } catch (e) {
-        console.warn(`Could not preload ${key} (${url}).`, e);
-      }
-    }
-  }
+  constructor() {}
 
   public prepare() {
     if (!this.ctx) {
       const AudioContextClass = window.AudioContext || (window as any).webkitAudioContext;
       this.ctx = new AudioContextClass();
       this.initConnections();
+      this.loadSamples();
     }
 
     // iOS unlock trick - play silent buffer
@@ -68,57 +48,76 @@ class SoundEngine {
     this.masterGain.gain.value = 0.5;
   }
 
-  private async decodeBuffers() {
+  private async loadSamples() {
     if (!this.ctx) return;
 
-    for (const [key, url] of Object.entries(AUDIO_FILES)) {
-      const rawBuffer = this.buffers.get(key + '_raw');
-      if (rawBuffer && !this.buffers.has(key)) {
-        try {
-          const audioBuffer = await this.ctx.decodeAudioData((rawBuffer as any).slice(0));
-          this.buffers.set(key, audioBuffer);
-          console.log(`Decoded: ${key}`);
-        } catch (e) {
-          console.warn(`Could not decode ${key}`, e);
-        }
+    console.log("Loading audio samples...");
+
+    const loadPromises = Object.entries(AUDIO_FILES).map(async ([key, url]) => {
+      try {
+        const response = await fetch(url);
+        if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+        const arrayBuffer = await response.arrayBuffer();
+        const audioBuffer = await this.ctx!.decodeAudioData(arrayBuffer);
+        this.buffers.set(key, audioBuffer);
+        console.log(`Loaded sample: ${key} (${url})`);
+      } catch (e) {
+        console.warn(`Could not load sample for ${key} (${url}).`, e);
       }
+    });
+
+    await Promise.all(loadPromises);
+    console.log("All samples loaded, ready to play");
+
+    // If tracks were already started, begin the WAV tracks now
+    if (this.isStarted) {
+      this.startWavTracks();
     }
   }
 
-  public async startAllTracks() {
-    if (!this.ctx || !this.masterGain || this.isStarted) return;
+  private startWavTracks() {
+    if (!this.ctx || !this.masterGain) return;
 
-    console.log("startAllTracks called");
-    this.isStarted = true;
-
-    // Decode any preloaded buffers
-    await this.decodeBuffers();
-
-    // Start all tracks simultaneously
+    console.log("Starting all tracks...");
     const startTime = this.ctx.currentTime;
 
-    for (const [key, url] of Object.entries(AUDIO_FILES)) {
-      const buffer = this.buffers.get(key);
-      if (!buffer || this.trackGains.has(key)) continue;
+    for (const [key, buffer] of this.buffers.entries()) {
+      if (this.trackGains.has(key)) continue;
 
       const source = this.ctx.createBufferSource();
       source.buffer = buffer;
       source.loop = true;
 
       const gain = this.ctx.createGain();
-      // Base track starts audible, others start muted
-      gain.gain.value = key === 'base' ? 0.8 : 0;
+      gain.gain.value = 0; // ALL start muted
 
       source.connect(gain);
       gain.connect(this.masterGain);
       source.start(startTime);
 
-      this.sources.set(key, source);
       this.trackGains.set(key, gain);
-      console.log(`Started track: ${key} (${key === 'base' ? 'audible' : 'muted'})`);
+      console.log(`Started track: ${key} (muted)`);
+    }
+
+    // Unmute base track immediately
+    const baseGain = this.trackGains.get('base');
+    if (baseGain) {
+      baseGain.gain.setTargetAtTime(0.8, this.ctx.currentTime, 0.1);
+      console.log("Base track unmuted");
     }
 
     console.log("All tracks started");
+  }
+
+  public startAllTracks() {
+    if (!this.ctx || !this.masterGain || this.isStarted) return;
+
+    console.log("startAllTracks called");
+    this.isStarted = true;
+
+    if (this.buffers.size > 0) {
+      this.startWavTracks();
+    }
   }
 
   public setMute(mute: boolean) {
