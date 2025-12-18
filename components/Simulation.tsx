@@ -7,6 +7,7 @@ import { Volume2, VolumeX, Play } from 'lucide-react';
 const Simulation: React.FC = () => {
   const [isInitialized, setIsInitialized] = useState(false);
   const [showOverlay, setShowOverlay] = useState(true);
+  const [isIOS, setIsIOS] = useState(false);
   const [sensors, setSensors] = useState<SensorState[]>([
     { id: '1', level: ArousalLevel.LOW, isActive: false, color: 'green', label: 'Low Arousal', soundDescription: 'Natural Soundscape' },
     { id: '2', level: ArousalLevel.MID, isActive: false, color: 'blue', label: 'Mid Arousal', soundDescription: 'Relaxing Tunes' },
@@ -15,6 +16,12 @@ const Simulation: React.FC = () => {
 
   const [muted, setMuted] = useState(false);
   const lastToggleTime = useRef<number>(0);
+
+  useEffect(() => {
+    const iOS = /iPad|iPhone|iPod/.test(navigator.userAgent) || 
+      (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+    setIsIOS(iOS);
+  }, []);
 
   useEffect(() => {
     if (!isInitialized) return;
@@ -29,7 +36,6 @@ const Simulation: React.FC = () => {
   }, [sensors, isInitialized]);
 
   const handleInitialize = async () => {
-    // We await prepare to ensure the AudioContext is resumed before proceeding
     await soundEngine.prepare();
     soundEngine.startAllTracks();
     setIsInitialized(true);
@@ -72,8 +78,16 @@ const Simulation: React.FC = () => {
           
           {showOverlay && (
             <div className="absolute inset-0 z-50 bg-black/80 backdrop-blur-md flex flex-col items-center justify-center p-6 text-center animate-in fade-in duration-500">
-                <p className="text-zinc-300 font-sans mb-6 max-w-xs">
+                <p className="text-zinc-300 font-sans mb-4 max-w-xs">
                     Click below to initialize the audio engine.
+                </p>
+                <p className="text-zinc-500 text-xs font-sans mb-6 max-w-sm leading-relaxed">
+                    Please ensure your device is not on silent mode for audio playback.
+                    {isIOS && (
+                      <span className="block mt-2">
+                        On iPhone: open Control Center (swipe down from top-right) and tap the bell icon, or long-press the Action Button (iPhone 15/16) to disable Silent Mode.
+                      </span>
+                    )}
                 </p>
                 <button 
                     onClick={handleInitialize}
