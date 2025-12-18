@@ -9,7 +9,7 @@ const Process: React.FC = () => {
   ];
 
   return (
-    <section className="w-full bg-[#050505] border-t border-white/5">
+    <section className="w-full bg-[#010101] border-t border-white/5">
        <div className="w-full">
         <div className="grid grid-cols-1 md:grid-cols-2">
           {['process-1.jpg', 'process-2.jpg', 'process-3.jpg', 'process-4.jpg'].map((filename, index) => (
