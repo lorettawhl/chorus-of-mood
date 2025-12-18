@@ -18,27 +18,30 @@ class SoundEngine {
 
   constructor() {}
 
-  public prepare() {
+  public async prepare() {
+    // 1. Initialize Context immediately on user gesture
     if (!this.ctx) {
       const AudioContextClass = window.AudioContext || (window as any).webkitAudioContext;
       this.ctx = new AudioContextClass();
       this.initConnections();
-      this.loadSamples();
     }
 
-    // iOS unlock trick - play silent buffer
-    if (this.ctx) {
-      const buffer = this.ctx.createBuffer(1, 1, 22050);
-      const source = this.ctx.createBufferSource();
-      source.buffer = buffer;
-      source.connect(this.ctx.destination);
-      
-      if (source.start) source.start(0);
-      else (source as any).noteOn(0);
+    // 2. IMPORTANT: Resume and play silent buffer IMMEDIATELY 
+    // This must happen before any 'await' calls to keep the iOS gesture valid
+    if (this.ctx.state === 'suspended') {
+      await this.ctx.resume();
+    }
 
-      if (this.ctx.state === 'suspended') {
-        this.ctx.resume();
-      }
+    // Play a tiny silent pop to "wake up" the hardware
+    const buffer = this.ctx.createBuffer(1, 1, 22050);
+    const source = this.ctx.createBufferSource();
+    source.buffer = buffer;
+    source.connect(this.ctx.destination);
+    source.start(0);
+
+    // 3. Now that the engine is "unlocked", load the actual files
+    if (!this.isLoaded) {
+      await this.loadSamples();
     }
   }
 
@@ -61,17 +64,15 @@ class SoundEngine {
         const arrayBuffer = await response.arrayBuffer();
         const audioBuffer = await this.ctx!.decodeAudioData(arrayBuffer);
         this.buffers.set(key, audioBuffer);
-        console.log(`Loaded sample: ${key} (${url})`);
+        console.log(`Loaded sample: ${key}`);
       } catch (e) {
-        console.warn(`Could not load sample for ${key} (${url}).`, e);
+        console.warn(`Could not load sample for ${key}`, e);
       }
     });
 
     await Promise.all(loadPromises);
     this.isLoaded = true;
-    console.log("All samples loaded, ready to play");
-
-    // If tracks were already started, begin the WAV tracks now
+    
     if (this.isStarted) {
       this.startWavTracks();
     }
@@ -80,7 +81,6 @@ class SoundEngine {
   private startWavTracks() {
     if (!this.ctx || !this.masterGain) return;
 
-    console.log("Starting all tracks...");
     const startTime = this.ctx.currentTime;
 
     for (const [key, buffer] of this.buffers.entries()) {
@@ -91,7 +91,6 @@ class SoundEngine {
       source.loop = true;
 
       const gain = this.ctx.createGain();
-      // Base track starts audible, others start muted
       gain.gain.value = key === 'base' ? 0.8 : 0;
 
       source.connect(gain);
@@ -99,18 +98,12 @@ class SoundEngine {
       source.start(startTime);
 
       this.trackGains.set(key, gain);
-      console.log(`Started track: ${key} (${key === 'base' ? 'audible' : 'muted'})`);
     }
-
-    console.log("All tracks started");
   }
 
   public startAllTracks() {
     if (!this.ctx || !this.masterGain || this.isStarted) return;
-
-    console.log("startAllTracks called");
     this.isStarted = true;
-
     if (this.buffers.size > 0) {
       this.startWavTracks();
     }
@@ -125,20 +118,16 @@ class SoundEngine {
 
   public startSound(level: ArousalLevel) {
     if (!this.ctx) return;
-
     const gain = this.trackGains.get(level);
     if (gain) {
-      console.log(`Unmuting track: ${level}`);
       gain.gain.setTargetAtTime(0.8, this.ctx.currentTime, 0.3);
     }
   }
 
   public stopSound(level: ArousalLevel) {
     if (!this.ctx) return;
-
     const gain = this.trackGains.get(level);
     if (gain) {
-      console.log(`Muting track: ${level}`);
       gain.gain.setTargetAtTime(0, this.ctx.currentTime, 0.2);
     }
   }
