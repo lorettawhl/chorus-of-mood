@@ -78,14 +78,14 @@ const Simulation: React.FC = () => {
           
           {showOverlay && (
             <div className="absolute inset-0 z-50 bg-black/80 backdrop-blur-md flex flex-col items-center justify-center p-6 text-center animate-in fade-in duration-500">
-                <p className="text-zinc-300 font-sans mb-4 max-w-xs">
+                <p className="text-zinc-300 font-sans mb-3 max-w-xs text-sm md:text-base">
                     Click below to initialize the audio engine.
                 </p>
-                <p className="text-zinc-500 text-xs font-sans mb-6 max-w-sm leading-relaxed">
+                <p className="text-zinc-500 text-[10px] md:text-xs font-sans mb-5 max-w-xs md:max-w-sm leading-relaxed">
                     Please ensure your device is not on silent mode for audio playback.
                     {isIOS && (
-                      <span className="block mt-2">
-                        On iPhone: open Control Center (swipe down from top-right) and tap the bell icon, or long-press the Action Button (iPhone 15/16) to disable Silent Mode.
+                      <span className="block mt-1">
+                        On iPhone: open Control Center (swipe down from top-right) and tap the bell icon, or long-press the Action Button (iPhone 15/16).
                       </span>
                     )}
                 </p>
