@@ -177,7 +177,7 @@ const HeroParticles: React.FC = () => {
   }, []);
 
   return (
-    <div ref={containerRef} className="relative w-full h-[300vh] bg-[#050505]">
+    <div ref={containerRef} className="relative w-full h-[300vh] bg-[#010101]">
       <div className="sticky top-0 w-full h-screen overflow-hidden flex items-center justify-center">
         
         {/* Ignition Backlight */}
