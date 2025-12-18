@@ -86,7 +86,7 @@ const Simulation: React.FC = () => {
                     Please ensure your device is not on silent mode for audio playback.
                     {isIOS && (
                       <span className="block mt-1 whitespace-normal">
-                        iPhone: swipe down from top-right and tap the bell icon, or long-press the Action Button.
+                        On iPhone: open Control Center (swipe down from top-right) and tap the bell icon, or long-press the Action Button (iPhone 15/16) to disable Silent Mode.
                       </span>
                     )}
                 </p>
