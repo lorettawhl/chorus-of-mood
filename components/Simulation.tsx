@@ -6,7 +6,7 @@ import { Volume2, VolumeX, Play } from 'lucide-react';
 
 const Simulation: React.FC = () => {
   const [isInitialized, setIsInitialized] = useState(false);
-  const [showOverlay, setShowOverlay] = useState(true); // Show for both desktop and mobile
+  const [showOverlay, setShowOverlay] = useState(true);
   const [sensors, setSensors] = useState<SensorState[]>([
     { id: '1', level: ArousalLevel.LOW, isActive: false, color: 'green', label: 'Low Arousal', soundDescription: 'Natural Soundscape' },
     { id: '2', level: ArousalLevel.MID, isActive: false, color: 'blue', label: 'Mid Arousal', soundDescription: 'Relaxing Tunes' },
@@ -28,8 +28,9 @@ const Simulation: React.FC = () => {
     });
   }, [sensors, isInitialized]);
 
-  const handleInitialize = () => {
-    soundEngine.prepare();
+  const handleInitialize = async () => {
+    // We await prepare to ensure the AudioContext is resumed before proceeding
+    await soundEngine.prepare();
     soundEngine.startAllTracks();
     setIsInitialized(true);
     setShowOverlay(false);
@@ -58,7 +59,6 @@ const Simulation: React.FC = () => {
       <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,_var(--tw-gradient-stops))] from-zinc-900 to-[#050505] opacity-50 z-0"></div>
       
       <div className="relative z-10 container mx-auto px-4 max-w-4xl flex flex-col items-center">
-        
         <div className="mb-12 text-center">
           <h2 className="text-3xl md:text-5xl font-display font-bold mb-4 bg-clip-text text-transparent bg-gradient-to-r from-zinc-200 to-zinc-500">
             The Digital Experience
@@ -107,9 +107,7 @@ const Simulation: React.FC = () => {
               />
             ))}
           </div>
-
         </div>
-
       </div>
     </section>
   );
