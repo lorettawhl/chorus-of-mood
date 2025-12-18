@@ -2,7 +2,7 @@ import React from 'react';
 
 const Team: React.FC = () => {
   return (
-    <section className="py-32 bg-[#050505] border-t border-white/5 flex flex-col items-center justify-center text-center">
+    <section className="py-32 bg-[#010101] border-t border-white/5 flex flex-col items-center justify-center text-center">
       <p className="text-zinc-500 text-sm mb-4">Produced by</p>
       <div className="space-y-2 mb-16">
         <h3 className="text-xl md:text-2xl font-display font-bold text-zinc-100 tracking-wide">Melody Liu</h3>
