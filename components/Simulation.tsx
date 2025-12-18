@@ -69,7 +69,7 @@ const Simulation: React.FC = () => {
           <h2 className="text-3xl md:text-5xl font-display font-bold mb-4 bg-clip-text text-transparent bg-gradient-to-r from-zinc-200 to-zinc-500">
             The Digital Experience
           </h2>
-          <p className="text-zinc-400 max-w-lg mx-auto">
+          <p className="text-zinc-400 text-xs md:text-base">
             Simulate the installation below.
             <span className="block">Activate sensors to layer sounds and merge emotional colors.</span>
           </p>
@@ -78,15 +78,15 @@ const Simulation: React.FC = () => {
         <div className="relative w-full p-8 md:p-16 rounded-3xl border border-white/5 bg-black/40 backdrop-blur-sm min-h-[400px] flex flex-col items-center justify-center overflow-hidden">
           
           {showOverlay && (
-            <div className="absolute inset-0 z-50 bg-black/80 backdrop-blur-md flex flex-col items-center justify-center p-6 text-center animate-in fade-in duration-500">
-                <p className="text-zinc-300 font-sans mb-3 max-w-xs text-sm md:text-base">
+            <div className="absolute inset-0 z-50 bg-black/80 backdrop-blur-md flex flex-col items-center justify-center p-4 md:p-6 text-center animate-in fade-in duration-500">
+                <p className="text-zinc-300 font-sans mb-3 text-sm md:text-base">
                     Click below to initialize the audio engine.
                 </p>
-                <p className="text-zinc-500 text-[10px] md:text-xs font-sans mb-5 max-w-md md:max-w-lg leading-relaxed">
+                <p className="text-zinc-500 text-[8px] md:text-[10px] font-sans mb-5 leading-relaxed whitespace-nowrap">
                     Please ensure your device is not on silent mode for audio playback.
                     {isIOS && (
-                      <span className="block mt-1">
-                        On iPhone: open Control Center (swipe down from top-right) and tap the bell icon, or long-press the Action Button (iPhone 15/16).
+                      <span className="block mt-1 whitespace-normal">
+                        iPhone: swipe down from top-right and tap the bell icon, or long-press the Action Button.
                       </span>
                     )}
                 </p>
