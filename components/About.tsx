@@ -9,7 +9,7 @@ const About: React.FC = () => {
   ];
 
   return (
-    <section className="py-24 bg-[#080808] text-left relative overflow-hidden">
+    <section className="py-24 bg-[#010101] text-left relative overflow-hidden">
       <div className="container mx-auto px-6 md:px-12 max-w-6xl grid grid-cols-1 md:grid-cols-2 gap-16 items-center mb-32">
         <div className="space-y-4 z-10 order-2 md:order-1">
           {/* Header */}
