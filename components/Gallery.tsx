@@ -6,7 +6,7 @@ const Gallery: React.FC = () => {
   const videoId = "BYVIAtQubJw";
 
   return (
-    <section className="w-full bg-[#050505] relative flex flex-col items-center justify-center min-h-screen py-24 md:py-32">
+    <section className="w-full bg-[#010101] relative flex flex-col items-center justify-center min-h-screen py-24 md:py-32">
       
       <div className="w-full flex flex-col items-center">
         
