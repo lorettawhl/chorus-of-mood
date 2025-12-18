@@ -61,8 +61,8 @@ const Simulation: React.FC = () => {
   };
 
   return (
-    <section id="simulation" className="relative w-full min-h-[80vh] flex flex-col items-center justify-center py-20 overflow-hidden bg-[#050505]">
-      <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,_var(--tw-gradient-stops))] from-zinc-900 to-[#050505] opacity-50 z-0"></div>
+    <section id="simulation" className="relative w-full min-h-[80vh] flex flex-col items-center justify-center py-20 overflow-hidden bg-[#010101]">
+      <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,_var(--tw-gradient-stops))] from-zinc-900 to-[#010101] opacity-50 z-0"></div>
       
       <div className="relative z-10 container mx-auto px-4 max-w-4xl flex flex-col items-center">
         <div className="mb-12 text-center">
