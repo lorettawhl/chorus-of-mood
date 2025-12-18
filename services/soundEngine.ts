@@ -1,134 +1,178 @@
 import { ArousalLevel } from '../types';
 
-const AUDIO_FILES = {
-  base: '/sounds/0001.wav',
-  [ArousalLevel.LOW]: '/sounds/0003.wav',
-  [ArousalLevel.MID]: '/sounds/0008.wav',
-  [ArousalLevel.HIGH]: '/sounds/0015.wav',
+const BASE_TRACK = '/sounds/0001.wav';
+
+const AUDIO_TRACKS: Record<ArousalLevel, string[]> = {
+  [ArousalLevel.LOW]: [
+    '/sounds/0003.wav',
+    '/sounds/0004.wav',
+    '/sounds/0005.wav',
+    '/sounds/0006.wav',
+    '/sounds/0007.wav',
+  ],
+  [ArousalLevel.MID]: [
+    '/sounds/0008.wav',
+    '/sounds/0009.wav',
+    '/sounds/0010.wav',
+    '/sounds/0011.wav',
+    '/sounds/0012.wav',
+    '/sounds/0013.wav',
+    '/sounds/0014.wav',
+  ],
+  [ArousalLevel.HIGH]: [
+    '/sounds/0015.wav',
+    '/sounds/0016.wav',
+    '/sounds/0017.wav',
+    '/sounds/0018.wav',
+    '/sounds/0019.wav',
+  ],
 };
 
 class SoundEngine {
-  public ctx: AudioContext | null = null;
-  private masterGain: GainNode | null = null;
+  private ctx: AudioContext | null = null;
+  private baseBuffer: AudioBuffer | null = null;
+  private baseGain: GainNode | null = null;
+  private baseSource: AudioBufferSourceNode | null = null;
+  
+  // Store buffers for all tracks
+  private trackBuffers: Map<string, AudioBuffer> = new Map();
+  // Store gain nodes for all tracks
   private trackGains: Map<string, GainNode> = new Map();
-  private buffers: Map<string, AudioBuffer> = new Map();
-  private isStarted: boolean = false;
-  private isLoaded: boolean = false;
-  private isMuted: boolean = false;
+  // Store source nodes for all tracks
+  private trackSources: Map<string, AudioBufferSourceNode> = new Map();
+  
+  // Track current index for each arousal level
+  private currentIndex: Record<ArousalLevel, number> = {
+    [ArousalLevel.LOW]: 0,
+    [ArousalLevel.MID]: 0,
+    [ArousalLevel.HIGH]: 0,
+  };
+  
+  // Track which level is currently active (unmuted)
+  private activeTrack: Record<ArousalLevel, string | null> = {
+    [ArousalLevel.LOW]: null,
+    [ArousalLevel.MID]: null,
+    [ArousalLevel.HIGH]: null,
+  };
 
-  constructor() {}
+  private masterGain: GainNode | null = null;
 
-  public async prepare() {
-    // 1. Initialize Context immediately on user gesture
-    if (!this.ctx) {
-      const AudioContextClass = window.AudioContext || (window as any).webkitAudioContext;
-      this.ctx = new AudioContextClass();
-      this.initConnections();
-    }
+  async prepare(): Promise<void> {
+    this.ctx = new AudioContext();
+    
+    // Play silent buffer immediately for iOS
+    const silentBuffer = this.ctx.createBuffer(1, 1, 22050);
+    const silentSource = this.ctx.createBufferSource();
+    silentSource.buffer = silentBuffer;
+    silentSource.connect(this.ctx.destination);
+    silentSource.start();
 
-    // 2. IMPORTANT: Resume and play silent buffer IMMEDIATELY 
-    // This must happen before any 'await' calls to keep the iOS gesture valid
-    if (this.ctx.state === 'suspended') {
-      await this.ctx.resume();
-    }
+    await this.ctx.resume();
 
-    // Play a tiny silent pop to "wake up" the hardware
-    const buffer = this.ctx.createBuffer(1, 1, 22050);
-    const source = this.ctx.createBufferSource();
-    source.buffer = buffer;
-    source.connect(this.ctx.destination);
-    source.start(0);
-
-    // 3. Now that the engine is "unlocked", load the actual files
-    if (!this.isLoaded) {
-      await this.loadSamples();
-    }
-  }
-
-  private initConnections() {
-    if (!this.ctx) return;
+    // Create master gain
     this.masterGain = this.ctx.createGain();
     this.masterGain.connect(this.ctx.destination);
-    this.masterGain.gain.value = 0.5;
+
+    // Load base track
+    const baseResponse = await fetch(BASE_TRACK);
+    const baseData = await baseResponse.arrayBuffer();
+    this.baseBuffer = await this.ctx.decodeAudioData(baseData);
+
+    // Load all arousal tracks
+    const allTracks = [
+      ...AUDIO_TRACKS[ArousalLevel.LOW],
+      ...AUDIO_TRACKS[ArousalLevel.MID],
+      ...AUDIO_TRACKS[ArousalLevel.HIGH],
+    ];
+
+    await Promise.all(
+      allTracks.map(async (trackPath) => {
+        const response = await fetch(trackPath);
+        const data = await response.arrayBuffer();
+        const buffer = await this.ctx!.decodeAudioData(data);
+        this.trackBuffers.set(trackPath, buffer);
+      })
+    );
   }
 
-  private async loadSamples() {
-    if (!this.ctx) return;
+  startAllTracks(): void {
+    if (!this.ctx || !this.masterGain || !this.baseBuffer) return;
 
-    console.log("Loading audio samples...");
+    const now = this.ctx.currentTime + 0.1;
 
-    const loadPromises = Object.entries(AUDIO_FILES).map(async ([key, url]) => {
-      try {
-        const response = await fetch(url);
-        if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
-        const arrayBuffer = await response.arrayBuffer();
-        const audioBuffer = await this.ctx!.decodeAudioData(arrayBuffer);
-        this.buffers.set(key, audioBuffer);
-        console.log(`Loaded sample: ${key}`);
-      } catch (e) {
-        console.warn(`Could not load sample for ${key}`, e);
-      }
-    });
+    // Start base track
+    this.baseGain = this.ctx.createGain();
+    this.baseGain.gain.value = 0.8;
+    this.baseGain.connect(this.masterGain);
 
-    await Promise.all(loadPromises);
-    this.isLoaded = true;
-    
-    if (this.isStarted) {
-      this.startWavTracks();
-    }
-  }
+    this.baseSource = this.ctx.createBufferSource();
+    this.baseSource.buffer = this.baseBuffer;
+    this.baseSource.loop = true;
+    this.baseSource.connect(this.baseGain);
+    this.baseSource.start(now);
 
-  private startWavTracks() {
-    if (!this.ctx || !this.masterGain) return;
+    // Start all arousal tracks (muted)
+    const allTracks = [
+      ...AUDIO_TRACKS[ArousalLevel.LOW],
+      ...AUDIO_TRACKS[ArousalLevel.MID],
+      ...AUDIO_TRACKS[ArousalLevel.HIGH],
+    ];
 
-    const startTime = this.ctx.currentTime;
+    allTracks.forEach((trackPath) => {
+      const buffer = this.trackBuffers.get(trackPath);
+      if (!buffer) return;
 
-    for (const [key, buffer] of this.buffers.entries()) {
-      if (this.trackGains.has(key)) continue;
+      const gain = this.ctx!.createGain();
+      gain.gain.value = 0; // Start muted
+      gain.connect(this.masterGain!);
 
-      const source = this.ctx.createBufferSource();
+      const source = this.ctx!.createBufferSource();
       source.buffer = buffer;
       source.loop = true;
-
-      const gain = this.ctx.createGain();
-      gain.gain.value = key === 'base' ? 0.8 : 0;
-
       source.connect(gain);
-      gain.connect(this.masterGain);
-      source.start(startTime);
+      source.start(now);
 
-      this.trackGains.set(key, gain);
-    }
+      this.trackGains.set(trackPath, gain);
+      this.trackSources.set(trackPath, source);
+    });
   }
 
-  public startAllTracks() {
-    if (!this.ctx || !this.masterGain || this.isStarted) return;
-    this.isStarted = true;
-    if (this.buffers.size > 0) {
-      this.startWavTracks();
-    }
-  }
-
-  public setMute(mute: boolean) {
-    this.isMuted = mute;
-    if (this.masterGain && this.ctx) {
-      this.masterGain.gain.setTargetAtTime(mute ? 0 : 0.5, this.ctx.currentTime, 0.1);
-    }
-  }
-
-  public startSound(level: ArousalLevel) {
+  startSound(level: ArousalLevel): void {
     if (!this.ctx) return;
-    const gain = this.trackGains.get(level);
+
+    const tracks = AUDIO_TRACKS[level];
+    const currentIdx = this.currentIndex[level];
+    const trackPath = tracks[currentIdx];
+    const gain = this.trackGains.get(trackPath);
+
     if (gain) {
-      gain.gain.setTargetAtTime(0.8, this.ctx.currentTime, 0.3);
+      // Fade in the current track
+      gain.gain.setTargetAtTime(0.8, this.ctx.currentTime, 0.1);
+      this.activeTrack[level] = trackPath;
     }
   }
 
-  public stopSound(level: ArousalLevel) {
+  stopSound(level: ArousalLevel): void {
     if (!this.ctx) return;
-    const gain = this.trackGains.get(level);
-    if (gain) {
-      gain.gain.setTargetAtTime(0, this.ctx.currentTime, 0.2);
+
+    const currentTrack = this.activeTrack[level];
+    if (currentTrack) {
+      const gain = this.trackGains.get(currentTrack);
+      if (gain) {
+        // Fade out
+        gain.gain.setTargetAtTime(0, this.ctx.currentTime, 0.1);
+      }
+    }
+
+    // Move to next track for next time
+    const tracks = AUDIO_TRACKS[level];
+    this.currentIndex[level] = (this.currentIndex[level] + 1) % tracks.length;
+    this.activeTrack[level] = null;
+  }
+
+  setMute(muted: boolean): void {
+    if (this.masterGain) {
+      this.masterGain.gain.value = muted ? 0 : 1;
     }
   }
 }
