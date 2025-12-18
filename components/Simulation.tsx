@@ -70,7 +70,8 @@ const Simulation: React.FC = () => {
             The Digital Experience
           </h2>
           <p className="text-zinc-400 max-w-lg mx-auto">
-            Simulate the installation below. Activate sensors to layer sounds and merge emotional colors.
+            Simulate the installation below.
+            <span className="block">Activate sensors to layer sounds and merge emotional colors.</span>
           </p>
         </div>
 
@@ -81,7 +82,7 @@ const Simulation: React.FC = () => {
                 <p className="text-zinc-300 font-sans mb-3 max-w-xs text-sm md:text-base">
                     Click below to initialize the audio engine.
                 </p>
-                <p className="text-zinc-500 text-[10px] md:text-xs font-sans mb-5 max-w-xs md:max-w-sm leading-relaxed">
+                <p className="text-zinc-500 text-[10px] md:text-xs font-sans mb-5 max-w-md md:max-w-lg leading-relaxed">
                     Please ensure your device is not on silent mode for audio playback.
                     {isIOS && (
                       <span className="block mt-1">
