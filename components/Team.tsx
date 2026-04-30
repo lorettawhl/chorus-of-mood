@@ -13,7 +13,7 @@ const Team: React.FC = () => {
 
       <div className="space-y-6 mb-16">
         {team.map((member) => (
-          
+          <a
             key={member.name}
             href={member.url}
             target="_blank"
