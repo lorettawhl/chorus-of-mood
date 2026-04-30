@@ -1,16 +1,16 @@
 import React from 'react';
+
 import Simulation from './components/Simulation';
 import About from './components/About';
 import Gallery from './components/Gallery';
 import Team from './components/Team';
 import HeroParticles from './components/HeroParticles';
 import Process from './components/Process';
+import Exhibition from './components/Exhibition';
 
 const App: React.FC = () => {
-
   return (
     <div className="min-h-screen bg-[#050505] text-white selection:bg-indigo-500/30 selection:text-indigo-200">
-      
       {/* Navigation / Header - Fixed Overlay */}
       <nav className="fixed top-0 w-full z-50 px-6 py-6 flex justify-between items-center mix-blend-difference pointer-events-none">
         <h1 className="text-xl font-display font-bold tracking-tight pointer-events-auto">CHORUS OF MOOD</h1>
@@ -24,6 +24,7 @@ const App: React.FC = () => {
         <Gallery />
         <About />
         <Simulation />
+        <Exhibition />
         <Process />
         <Team />
       </main>
