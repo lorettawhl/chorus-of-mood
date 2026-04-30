@@ -27,7 +27,7 @@ const Process: React.FC = () => {
   const [activeIndex, setActiveIndex] = useState(0);
   const [isPaused, setIsPaused] = useState(false);
 
-  // Auto-advance every 6 seconds; reset whenever activeIndex changes
+  // Auto-advance every 6 seconds (desktop slideshow only)
   useEffect(() => {
     if (isPaused) return;
     const interval = setInterval(() => {
@@ -41,19 +41,11 @@ const Process: React.FC = () => {
       <div className="container mx-auto px-6">
         <p className="text-zinc-500 text-sm md:text-base mb-12">Process:</p>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-12 md:gap-20 items-center">
-          {/* Left: Description */}
-          <div key={activeIndex} className="space-y-4 process-fade">
-            <p className="text-zinc-500 text-xs font-mono tracking-widest">
-              {String(activeIndex + 1).padStart(2, '0')} / {String(slides.length).padStart(2, '0')}
-            </p>
-            <p className="text-zinc-300 text-sm md:text-base leading-relaxed">
-              {slides[activeIndex].caption}
-            </p>
-          </div>
-
-          {/* Right: Slideshow */}
+        {/* Desktop: 2-column slideshow, image left + description right */}
+        <div className="hidden md:grid md:grid-cols-2 gap-12 md:gap-20 items-center">
+          {/* Left: Slideshow (image at 75% of column width) */}
           <div
+            className="max-w-[75%] mx-auto w-full"
             onMouseEnter={() => setIsPaused(true)}
             onMouseLeave={() => setIsPaused(false)}
           >
@@ -85,6 +77,37 @@ const Process: React.FC = () => {
               ))}
             </div>
           </div>
+
+          {/* Right: Description */}
+          <div key={activeIndex} className="space-y-4 process-fade">
+            <p className="text-zinc-500 text-xs font-mono tracking-widest">
+              {String(activeIndex + 1).padStart(2, '0')} / {String(slides.length).padStart(2, '0')}
+            </p>
+            <p className="text-zinc-300 text-sm md:text-base leading-relaxed">
+              {slides[activeIndex].caption}
+            </p>
+          </div>
+        </div>
+
+        {/* Mobile: horizontal scroll of image+caption cards */}
+        <div className="md:hidden -mx-6 overflow-x-auto process-mobile-scroll">
+          <div className="flex gap-4 px-6">
+            {slides.map((slide, i) => (
+              <div key={i} className="flex-shrink-0 w-[80vw] space-y-3">
+                <div className="aspect-[4/3] overflow-hidden bg-[#050505]">
+                  <img
+                    src={slide.image}
+                    alt={`Process step ${i + 1}`}
+                    className="w-full h-full object-cover"
+                  />
+                </div>
+                <p className="text-zinc-500 text-xs font-mono tracking-widest">
+                  {String(i + 1).padStart(2, '0')} / {String(slides.length).padStart(2, '0')}
+                </p>
+                <p className="text-zinc-300 text-sm leading-relaxed">{slide.caption}</p>
+              </div>
+            ))}
+          </div>
         </div>
       </div>
 
@@ -95,6 +118,14 @@ const Process: React.FC = () => {
         }
         .process-fade {
           animation: processFadeIn 0.6s ease-out;
+        }
+        .process-mobile-scroll {
+          -webkit-overflow-scrolling: touch;
+          scrollbar-width: none;
+          -ms-overflow-style: none;
+        }
+        .process-mobile-scroll::-webkit-scrollbar {
+          display: none;
         }
       `}</style>
     </section>
