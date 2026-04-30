@@ -2,8 +2,8 @@ import React from 'react';
 
 const Team: React.FC = () => {
   const team = [
-    { name: 'Loretta Wong', handle: 'moodcore.fx', url: 'https://instagram.com/moodcore.fx' },
     { name: 'Melody Liu', handle: 'ml.line.id', url: 'https://instagram.com/ml.line.id' },
+    { name: 'Loretta Wong', handle: 'moodcore.fx', url: 'https://instagram.com/moodcore.fx' },
     { name: 'Tila Tuzuturk', handle: 'designby.tila', url: 'https://instagram.com/designby.tila' },
   ];
 
@@ -16,7 +16,7 @@ const Team: React.FC = () => {
         Open for collaborations, please find the designer contacts below
       </p>
 
-      <div className="space-y-6">
+      <div className="flex flex-col md:flex-row gap-6 md:gap-16 items-center justify-center">
         {team.map((member) => (
           <a
             key={member.name}
