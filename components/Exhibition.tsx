@@ -9,7 +9,7 @@ const Exhibition: React.FC = () => {
     },
   ];
 
-  // 16 images, duplicated for seamless loop
+  // 16 images, duplicated for seamless loop on desktop
   const images = Array.from({ length: 16 }, (_, i) => `/images/exhibition-${i + 1}.jpg`);
   const loopedImages = [...images, ...images];
 
@@ -77,6 +77,27 @@ const Exhibition: React.FC = () => {
         @keyframes exhibition-scroll {
           from { transform: translateX(0); }
           to { transform: translateX(-50%); }
+        }
+
+        /* Mobile: switch from auto-scroll to manual horizontal swipe */
+        @media (max-width: 768px) {
+          .exhibition-marquee {
+            overflow-x: auto;
+            overflow-y: hidden;
+            -webkit-overflow-scrolling: touch;
+            scrollbar-width: none;
+            -ms-overflow-style: none;
+          }
+          .exhibition-marquee::-webkit-scrollbar {
+            display: none;
+          }
+          .exhibition-track {
+            animation: none;
+          }
+          /* Hide the duplicate set so users only see 16 unique images */
+          .exhibition-track > *:nth-child(n+17) {
+            display: none;
+          }
         }
       `}</style>
     </section>
