@@ -9,8 +9,8 @@ const Exhibition: React.FC = () => {
     },
   ];
 
-  // 10 images, duplicated for seamless loop
-  const images = Array.from({ length: 10 }, (_, i) => `/images/exhibition-${i + 1}.jpg`);
+  // 16 images, duplicated for seamless loop
+  const images = Array.from({ length: 16 }, (_, i) => `/images/exhibition-${i + 1}.jpg`);
   const loopedImages = [...images, ...images];
 
   return (
@@ -71,7 +71,7 @@ const Exhibition: React.FC = () => {
       <style>{`
         .exhibition-track {
           width: max-content;
-          animation: exhibition-scroll 60s linear infinite;
+          animation: exhibition-scroll 90s linear infinite;
         }
         .exhibition-marquee:hover .exhibition-track {
           animation-play-state: paused;
