@@ -9,7 +9,10 @@ const Team: React.FC = () => {
 
   return (
     <section className="py-32 bg-[#050505] border-t border-white/5 flex flex-col items-center justify-center text-center">
-      <p className="text-zinc-500 text-sm mb-10">Contacts & collaboration</p>
+      <h2 className="text-3xl md:text-4xl font-display font-bold text-zinc-100 tracking-wide mb-2">
+        Contacts
+      </h2>
+      <p className="text-zinc-500 text-sm mb-10">Open for collaborations</p>
 
       <div className="space-y-6">
         {team.map((member) => (
