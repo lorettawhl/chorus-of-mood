@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useRef } from 'react';
 
 const Exhibition: React.FC = () => {
   const exhibitions = [
@@ -9,9 +9,34 @@ const Exhibition: React.FC = () => {
     },
   ];
 
-  // 16 images, duplicated for seamless loop on desktop
+  // 16 images, duplicated for seamless loop
   const images = Array.from({ length: 16 }, (_, i) => `/images/exhibition-${i + 1}.jpg`);
   const loopedImages = [...images, ...images];
+
+  // Refs for mobile auto-scroll pause/resume
+  const trackRef = useRef<HTMLDivElement>(null);
+  const resumeTimerRef = useRef<number | null>(null);
+
+  const pauseAnimation = () => {
+    if (trackRef.current) {
+      trackRef.current.style.animationPlayState = 'paused';
+    }
+    if (resumeTimerRef.current !== null) {
+      clearTimeout(resumeTimerRef.current);
+      resumeTimerRef.current = null;
+    }
+  };
+
+  const scheduleResume = () => {
+    if (resumeTimerRef.current !== null) {
+      clearTimeout(resumeTimerRef.current);
+    }
+    resumeTimerRef.current = window.setTimeout(() => {
+      if (trackRef.current) {
+        trackRef.current.style.animationPlayState = 'running';
+      }
+    }, 1500);
+  };
 
   return (
     <section className="py-32 bg-[#050505] border-t border-white/5">
@@ -49,8 +74,13 @@ const Exhibition: React.FC = () => {
         </div>
       </div>
 
-      <div className="exhibition-marquee w-full overflow-hidden">
-        <div className="exhibition-track flex">
+      <div
+        className="exhibition-marquee w-full overflow-hidden"
+        onTouchStart={pauseAnimation}
+        onTouchEnd={scheduleResume}
+        onTouchCancel={scheduleResume}
+      >
+        <div ref={trackRef} className="exhibition-track flex">
           {loopedImages.map((src, i) => (
             <div
               key={i}
@@ -79,7 +109,7 @@ const Exhibition: React.FC = () => {
           to { transform: translateX(-50%); }
         }
 
-        /* Mobile: switch from auto-scroll to manual horizontal swipe */
+        /* Mobile: auto-scroll continues, plus enable manual horizontal swipe */
         @media (max-width: 768px) {
           .exhibition-marquee {
             overflow-x: auto;
@@ -89,13 +119,6 @@ const Exhibition: React.FC = () => {
             -ms-overflow-style: none;
           }
           .exhibition-marquee::-webkit-scrollbar {
-            display: none;
-          }
-          .exhibition-track {
-            animation: none;
-          }
-          /* Hide the duplicate set so users only see 16 unique images */
-          .exhibition-track > *:nth-child(n+17) {
             display: none;
           }
         }
