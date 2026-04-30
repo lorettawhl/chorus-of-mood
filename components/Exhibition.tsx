@@ -15,10 +15,8 @@ const Exhibition: React.FC = () => {
 
   return (
     <section className="py-32 bg-[#050505] border-t border-white/5">
-      <div className="container mx-auto px-6 mb-16 text-center">
-        <h2 className="text-3xl md:text-4xl font-display font-bold text-zinc-100 tracking-wide mb-6">
-          Exhibitions
-        </h2>
+      <div className="container mx-auto px-6 mb-16">
+        <p className="text-zinc-500 text-sm md:text-base mb-4">Exhibitions:</p>
 
         <div className="space-y-3">
           {exhibitions.map((ex) => (
