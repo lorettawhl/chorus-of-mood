@@ -12,8 +12,9 @@ const Team: React.FC = () => {
       <h2 className="text-3xl md:text-4xl font-display font-bold text-zinc-100 tracking-wide mb-2">
         Developed by
       </h2>
-      <p className="text-zinc-500 text-sm mb-10">
-        Open for collaborations, please find the designer contacts below
+      <p className="text-zinc-500 text-sm mb-10 leading-relaxed">
+        Open for collaborations<br />
+        Please find the designer contacts below
       </p>
 
       <div className="flex flex-col md:flex-row gap-6 md:gap-16 items-center justify-center">
