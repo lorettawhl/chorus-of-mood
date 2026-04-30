@@ -11,7 +11,7 @@ const Team: React.FC = () => {
     <section className="py-32 bg-[#050505] border-t border-white/5 flex flex-col items-center justify-center text-center">
       <p className="text-zinc-500 text-sm mb-10">Contacts & collaboration</p>
 
-      <div className="space-y-6 mb-16">
+      <div className="space-y-6">
         {team.map((member) => (
           <a
             key={member.name}
@@ -45,10 +45,6 @@ const Team: React.FC = () => {
           </a>
         ))}
       </div>
-
-      <p className="text-zinc-600 text-sm md:text-base font-mono tracking-widest uppercase">
-        In collaboration with Central Saint Martins
-      </p>
     </section>
   );
 };
